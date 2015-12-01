@@ -1,0 +1,448 @@
+package mamshops.businessmodels.database;
+
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import mamshops.businessmodels.propertykeys.IPropertyKey;
+import mamshops.businessmodels.propertykeys.node.INodePropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.relationships.types.IMamsRelationshipType;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+
+import org.neo4j.tooling.GlobalGraphOperations;
+import org.neo4j.cypher.CypherException;
+import org.neo4j.cypher.SyntaxException;
+import org.neo4j.cypher.javacompat.ExecutionEngine;
+import org.neo4j.cypher.javacompat.ExecutionResult;
+import org.neo4j.cypher.javacompat.QueryStatistics;
+import org.neo4j.graphdb.ConstraintViolationException;
+import org.neo4j.graphdb.Direction;
+import org.neo4j.graphdb.DynamicLabel;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Path;
+import org.neo4j.graphdb.PropertyContainer;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.ResourceIterable;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+import org.neo4j.graphdb.schema.Schema;
+import org.neo4j.graphdb.traversal.Evaluation;
+import org.neo4j.graphdb.traversal.Evaluator;
+import org.neo4j.graphdb.traversal.Evaluators;
+import org.neo4j.graphdb.traversal.TraversalDescription;
+import org.neo4j.graphdb.traversal.Traverser;
+import org.neo4j.graphdb.traversal.Uniqueness;
+import org.neo4j.kernel.impl.util.StringLogger;
+
+class GraphDatabase{
+	private final static String GRAPH_PATH="neo4j.graphdb.path";
+	private final static String GRAPH_ARCHIVE_DIR="archive.graph.directory";
+	private final static String GRAPH_ARCHIVE_PREFIX="archive.graph.prefix";
+	private static final String EXCEPTION_STOP_SERVER="server.exception.interrupt";
+	private final static String GRAPH_ARCHIV_ACTIV="graph.archivation.activ";
+	
+	private static GraphDatabase _instance;
+	private GraphDatabaseService _graph;
+	private ExecutionEngine _engine;
+	
+ 	private GraphDatabase()
+	{				
+		if(_graph!=null)
+			return;		
+		File currentGraph=new File(PropertiesManager.getProperty(GRAPH_PATH));
+		DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+		Calendar cal = Calendar.getInstance();		
+		String copyGraphName=PropertiesManager.getProperty(GRAPH_ARCHIVE_PREFIX)+dateFormat.format(cal.getTime());
+		
+		//Archive current graph
+		if(PropertiesManager.getProperty(GRAPH_ARCHIV_ACTIV).equals("true") && currentGraph.exists())
+		{
+			System.out.println("Archive current graph");
+			try {
+				GenericFunctions.copyFolder(currentGraph, new File(PropertiesManager.getProperty(GRAPH_ARCHIVE_DIR),copyGraphName));
+			} catch (IOException e) {
+				e.printStackTrace();
+				if(PropertiesManager.getProperty(EXCEPTION_STOP_SERVER).equals("true"))
+				{
+					java.lang.System.exit(1); 
+					return;
+				}	
+			}
+		}	
+		_graph=new GraphDatabaseFactory().newEmbeddedDatabase(PropertiesManager.getProperty(GRAPH_PATH));		
+		_engine=new ExecutionEngine(_graph, StringLogger.SYSTEM_ERR);
+	}
+		
+	static GraphDatabase getInstance()
+	{
+		if(_instance==null)
+			_instance=new GraphDatabase();
+		return _instance;
+	}	
+		
+	static void disconnect()
+	{
+		if(getInstance()._graph!=null)
+		{
+			getInstance()._graph.shutdown();
+			getInstance()._graph=null;
+		}
+	}
+	
+	static void clear() {
+		if(_instance==null)
+			return;
+		disconnect();
+		_instance=null;
+	}
+		
+	static String getNodeLabel(Node node)
+	{
+		String result=null;
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{				
+			java.util.Iterator<Label> iteratorLabel=node.getLabels().iterator();
+			if(iteratorLabel.hasNext())
+				result=iteratorLabel.next().name();
+			tx.success();
+		}
+		return result;
+	}
+	
+	static String getRelationshipType(Relationship relationship)
+	{
+		String result=null;
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{				
+			result=relationship.getType().toString();
+			tx.success();
+		}
+		return result;
+	}
+	
+	static void setProperty(PropertyContainer propertyContainer,IPropertyKey key,Object value)	
+	{
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{				
+			propertyContainer.setProperty(key.toString(), value);
+			tx.success();
+		}
+	}
+	
+	static Object getProperty(PropertyContainer propertyContainer,IPropertyKey key)
+	{
+		Object result=null;
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			if (propertyContainer==null || !propertyContainer.hasProperty(key.toString()))
+				return null;		
+			result=propertyContainer.getProperty(key.toString());
+			tx.success();
+		}
+		return result;
+	}
+	
+	static Node createNode(NodeLabel labelName,INodePropertyKey key,Object value,boolean getExistingOne)
+	{
+		Node result=null;
+		Label label=DynamicLabel.label(labelName.toString());
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{			
+			Schema schema=getInstance()._graph.schema();
+			if(!schema.getIndexes(label).iterator().hasNext())
+				schema.constraintFor(label).assertPropertyIsUnique(key.toString()).create();
+			tx.success();
+		}
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			try
+			{
+				result=getInstance()._graph.createNode(label);
+				result.setProperty(key.toString(), value);
+			}
+			catch(ConstraintViolationException cve)
+			{
+				result.delete();
+				result=null;
+			}
+			tx.success();
+		}
+		if(result==null && getExistingOne)
+			result=findNodesByLabelAndProperty(labelName, key, value).get(0);
+		return result;
+	}
+		
+	static List<Node> findNodesByLabelAndProperty(NodeLabel labelName,INodePropertyKey key,Object value)
+	{
+		List<Node> result=new ArrayList<>();
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			Label label=DynamicLabel.label(labelName.toString());		
+			ResourceIterable<Node> allNodes= getInstance()._graph.findNodesByLabelAndProperty(label, key.toString(), value);			
+			result=transformIterableInList(allNodes);
+			tx.success();
+		}
+		return result;
+	}
+	
+	static Node getNode(long nodeId)
+	{
+		Node node;
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			node=getInstance()._graph.getNodeById(nodeId);
+			tx.success();
+		}
+		return node;
+	}
+
+	static Node getOtherNode(Node node,Relationship relationShip)
+	{
+		Node result=null;
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			result=relationShip.getOtherNode(node);
+			tx.success();
+		}
+		return result;
+	}
+			
+	static List<Node> getNodes(Node startNode,List<IMamsRelationshipType> mamsRelationships,Integer depth)
+	{
+		List<Node> result=new ArrayList<>();
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			TraversalDescription td = getInstance()._graph.traversalDescription().depthFirst();
+		 	for(IMamsRelationshipType relationshipType:mamsRelationships)
+		 		td=td.relationships(getRelationshipType(relationshipType));
+		 	if(depth!=null)
+		 		td=td.evaluator( Evaluators.atDepth(depth) );	
+		 	td.evaluator(Evaluators.excludeStartPosition());
+		 	Traverser tr=td.traverse( startNode );
+		 	for(Path path:tr)
+		 		result.add(path.endNode());
+		 	tx.success();
+		}	
+		return result;
+	}
+		
+	static List<Node> getNodes(Node startNode,final Node endNode,List<IMamsRelationshipType> relationshipTypes,boolean uniqueResult)
+	{
+		List<Node> result=new ArrayList<>();
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			TraversalDescription td = getInstance()._graph.traversalDescription().depthFirst();
+		 	for(IMamsRelationshipType relationshipType:relationshipTypes)
+		 		td=td.relationships(getRelationshipType(relationshipType));
+		 	td=td.evaluator(Evaluators.excludeStartPosition());
+		 	if(!uniqueResult)
+		 		td=td.uniqueness(Uniqueness.NODE_PATH);
+		 	td=td.evaluator(new Evaluator() {
+				@Override
+				public Evaluation evaluate(Path path) {
+					boolean isEndNode=path.endNode().equals(endNode);
+					return Evaluation.of(isEndNode, !isEndNode);
+				}
+			});		 
+		 	Traverser tr=td.traverse( startNode );
+		 	for(Path path:tr)
+		 		result.add(path.endNode());
+			tx.success();
+		}	
+		return result;
+	}
+	
+	static List<Relationship> getRelationships(Node startNode, final Node endNode,List<IMamsRelationshipType> relationshipTypes)
+	{
+		List<Relationship> result=new ArrayList<>();
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			TraversalDescription td = getInstance()._graph.traversalDescription().depthFirst();
+		 	for(IMamsRelationshipType relationshipType:relationshipTypes)
+		 		td=td.relationships(getRelationshipType(relationshipType));
+		 	td=td.evaluator(Evaluators.excludeStartPosition());
+		 	td=td.evaluator(new Evaluator() {
+				@Override
+				public Evaluation evaluate(Path path) {
+					boolean isEndNode=path.endNode().equals(endNode);
+					return Evaluation.of(isEndNode, !isEndNode);
+				}
+			});		 
+		 	Traverser tr=td.traverse( startNode );
+		 	for(Path path:tr)
+		 		result.add(path.endNode());
+			tx.success();
+		}
+		return result;
+	}
+	
+	static Relationship getRelationship(long rsId)
+	{
+		Relationship relationship;
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			relationship=getInstance()._graph.getRelationshipById(rsId);
+			tx.success();
+		}
+		return relationship;
+	}
+	
+	static Relationship createRelationshipTo(Node node,Node targetNode,IMamsRelationshipType relationShipType)
+	{
+		Relationship result=null;
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			boolean alreadyExists=false;
+			ListIterator<Relationship> existingRelationshipIterator=getRelationshipsFromNode(node, relationShipType, true, true).listIterator();
+			while(!alreadyExists && existingRelationshipIterator.hasNext())
+				alreadyExists=existingRelationshipIterator.next().getOtherNode(node).getId()==targetNode.getId();
+			if(!alreadyExists)
+				result=node.createRelationshipTo(targetNode, getRelationshipType(relationShipType));
+			tx.success();
+		}
+		return result;
+	}	
+	
+	static List<Relationship> getRelationshipsFromNode(Node node,IMamsRelationshipType relationShipType,boolean startnode,boolean endnode)
+	{
+		List<Relationship> result=new ArrayList<>();
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			Direction direction=null;
+			if(startnode && !endnode)
+				direction=Direction.OUTGOING;
+			else if(!startnode)
+				direction=Direction.INCOMING;
+			else
+				direction=Direction.BOTH;
+			
+			Iterable<Relationship> iterableRelationships=relationShipType!=null?
+					node.getRelationships(direction,getRelationshipType(relationShipType)):
+						node.getRelationships(direction);
+			result=transformIterableInList(iterableRelationships);
+			tx.success();
+		}
+		return result;
+	}
+		
+	static Node getRelationshipNode(Relationship relationship,boolean startRelationship)
+	{
+		Node result=null;
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			result=startRelationship?relationship.getStartNode():relationship.getEndNode();
+			tx.success();
+		}
+		return result;
+	}
+		
+	static List<Node> getNodes(NodeLabel nodeLabel)
+	{
+		List<Node> result=new ArrayList<>();	
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			Label label=DynamicLabel.label(nodeLabel.toString());			
+			result=transformIterableInList(GlobalGraphOperations.at(getInstance()._graph).getAllNodesWithLabel(label));
+			tx.success();
+		}
+		return result;
+	}
+
+	static void removeRelationShip(Relationship relationShip)
+	{
+		try(Transaction tx=getInstance()._graph.beginTx())
+		{
+			relationShip.delete();
+			tx.success();
+		}
+	}
+
+	static String sendCommand(String command)
+	{
+		ExecutionResult result;
+		StringBuffer sb=new StringBuffer();
+		try ( Transaction tx=getInstance()._graph.beginTx())
+		{
+			try
+			{
+				result = getInstance()._engine.execute( command );				
+			    for ( Map<String, Object> row : result )
+			    {
+			        for ( Entry<String, Object> column : row.entrySet() )
+			        	sb.append(column.getKey() + ": " + column.getValue() + "; ");
+			        sb.append(System.lineSeparator());
+			    }
+			    sb.append(getStats(result.getQueryStatistics()));
+			    	tx.success();
+			}
+			catch(SyntaxException se)
+			{
+				sb.append(se.getLocalizedMessage());
+			}
+			catch(CypherException ce)
+			{
+				sb.append(ce.getLocalizedMessage());
+			}			
+		}		
+		return sb.toString();		
+	}
+	
+	private static RelationshipType getRelationshipType(final IMamsRelationshipType type)
+	{
+		RelationshipType result=new RelationshipType() {
+			
+			public String name() {
+				return type.getClass().getName()+"_"+type.toString();
+			}
+		};
+		return result;
+	}
+		
+	private static StringBuilder getStats(QueryStatistics stats)
+	{
+		StringBuilder result=new StringBuilder();		
+		if(!stats.containsUpdates())
+			return result;
+		for(Method method:QueryStatistics.class.getMethods())
+		{
+			if(!method.getReturnType().equals(Integer.TYPE) || !method.getName().startsWith("get"))
+				continue;
+			try {
+				int methodResult=(int)method.invoke(stats);
+				if(methodResult>0)
+				{
+					result.append(method.getName().replace("get", "")+ ":" + methodResult);
+					result.append(System.lineSeparator());
+				}
+			} catch (IllegalAccessException | IllegalArgumentException
+					| InvocationTargetException e) {
+				e.printStackTrace();
+				continue;
+			}
+			
+		}
+		return result;
+	}
+
+	private static <T> List<T> transformIterableInList(Iterable<T> resourceIterable)
+	{
+		List<T> result=new ArrayList<>();
+		for(T currentNode:resourceIterable)
+			result.add(currentNode);
+		return result;
+	}
+}

@@ -1,0 +1,36 @@
+package nikoBlex.requests.get;
+
+import java.util.HashMap;
+
+import javax.servlet.ServletContext;
+
+import nikoBlex.requests.getset.AbstractGetter;
+import nikoBlex.tools.entries.ClassesManager;
+import nikoBlex.tools.serviceLocators.IServiceLocator;
+
+public class GetDataHelpersManager<NodeLabel extends Enum<NodeLabel>> implements IServiceLocator {
+	private HashMap<String,Class<? extends AbstractGetter>> _mapDynamicVelocity=new HashMap<>();
+	
+	@Override
+	public void initServiceLocator(ClassesManager cm, ServletContext context)
+			throws Exception {
+		for(Class<? extends AbstractGetter<NodeLabel>> currentClass:cm.getClasses(AbstractGetter.class))
+			_mapDynamicVelocity.put(currentClass.getSimpleName(), currentClass);
+	}
+
+	public HashMap<String,Class<? extends AbstractGetter>> getListRequestGetters()
+	{
+		return _mapDynamicVelocity;
+	}
+	
+	public Class<? extends AbstractGetter> get(String key)
+	{
+		return _mapDynamicVelocity.get(key);
+	}
+	
+	@Override
+	public void endServiceLocator() {
+		
+	}
+
+}

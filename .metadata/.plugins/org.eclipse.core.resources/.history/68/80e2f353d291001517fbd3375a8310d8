@@ -1,0 +1,4 @@
+package nikoBlex.requests.getset;
+
+public interface IGetterSetter {
+	void initialize(HttpServletRequest request)}

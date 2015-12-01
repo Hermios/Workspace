@@ -1,0 +1,44 @@
+ package mamshops.user.relationshipgetters;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.businessmodels.node.MamsNode;
+import mamshops.businessmodels.relationships.MamsRelationship;
+import mamshops.relationships.propertykeys.FriendshipPropertyKey;
+import mamshops.relationships.types.UserRelationshipType;
+import mamshops.requests.session.SessionAttributeKeys;
+import mamshops.requests.velocity.IRequestGetter;
+import mamshops.requests.velocity.UserExpectedStatus;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public class FriendshipGetter implements IRequestGetter{
+	private MamsRelationship _currentFriendship;
+	
+	@HelperAnnotation(description="return true if the current friendship was validated")
+	public boolean isValidated()
+	{
+		return (boolean)_currentFriendship.getProperty(FriendshipPropertyKey.validate);
+	}
+	
+
+	@Override
+	public void setRequest(HttpServletRequest request) throws Exception {
+		Object friendId=request.getSession().getAttribute(SessionAttributeKeys.currentFriend.toString());
+		if(friendId==null)
+			return;
+		Object currentUserId=request.getSession().getAttribute(SessionAttributeKeys.currentUser.toString());
+		if(currentUserId==null)
+			return;			
+		List<Long> listRels=new MamsNode((Long)friendId).getRelationships(UserRelationshipType.friend, true, true);
+		if (!listRels.isEmpty())
+			_currentFriendship=new MamsRelationship(listRels.get(0));
+	}
+
+
+	@Override
+	public UserExpectedStatus getExpectedStatus() {
+		return UserExpectedStatus.user;
+	}
+}

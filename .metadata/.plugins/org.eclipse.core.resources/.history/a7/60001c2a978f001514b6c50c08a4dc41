@@ -1,0 +1,163 @@
+package nikoBlex.requests.getset;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+
+import nikoBlex.businessmodels.database.GraphNode;
+import nikoBlex.businessmodels.enums.INodePropertyKey;
+import nikoBlex.requests.getset.AbstractGetSet;
+import nikoBlex.requests.keys.RequestParameterKeys;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+import nikoBlex.usecases.user.IUserAuthorizationLevel;
+
+public abstract class AbstractGetSet<NodeLabel extends Enum<NodeLabel>>{
+	protected HttpSession _session;
+	protected HttpServletRequest _request;
+	protected ServletContext _servletContext;
+	protected GraphNode<NodeLabel> _currentNode;	
+	protected String[] _parameters;	
+	protected String _parameter;
+	protected String _currentValue;
+	private IUserAuthorizationLevel _methodAccess;
+	private INodePropertyKey _refKey;
+	private SessionAttributeKeys _sessionAttributeKey;
+	private NodeLabel _nodeLabel;
+	protected AbstractGetSet(NodeLabel nl,IUserAuthorizationLevel methodAccess,INodePropertyKey refKey,SessionAttributeKeys sessionAttributeKey)
+	{
+		_nodeLabel=nl;
+		_methodAccess=methodAccess;
+		_refKey=refKey;
+		_sessionAttributeKey=sessionAttributeKey;
+	}
+	
+	public Long getId()
+	{
+		return _currentNode!=null?_currentNode.getId():-1;
+	}
+	
+	public static <NodeLabel extends Enum<NodeLabel>,T extends AbstractGetSet<NodeLabel>> T construct(Class<T> getset,HttpServletRequest request)
+	{
+		T instance;
+		try {
+			instance = getset.newInstance();
+			instance.initialize(request);
+			return instance;
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	public <T extends AbstractGetSet<NodeLabel>> T construct(Class<T> getset,GraphNode<NodeLabel> node)
+	{
+		T instance;
+		try {
+			instance = getset.newInstance();
+			instance.initialize(_request);
+			instance.setNode(node);			
+			return instance;
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
+
+	public static <NodeLabel extends Enum<NodeLabel>,T extends AbstractGetSet<NodeLabel>> T constructWithNode(Class<T> getset,GraphNode<NodeLabel> node)
+	{
+		T instance;
+		try {
+			instance = getset.newInstance();
+			instance.setNode(node);			
+			return instance;
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			return null;
+		}
+		
+	}
+
+	protected <T extends AbstractGetSet<NodeLabel>> T construct(Class<T> getset)
+	{
+		T instance;
+		try {
+			instance = getset.newInstance();
+			instance.initialize(_request);
+			return instance;
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	protected void setNode(GraphNode<NodeLabel> node)
+	{
+		_currentNode=node;
+	}
+
+	public GraphNode<NodeLabel> getNode()
+	{
+		return _currentNode;
+	}
+	
+	protected void initialize(HttpServletRequest request){
+		_parameter=null;
+		_parameters=null;				
+		_currentNode=null;
+		_request=request;
+		if(request==null)
+			return;
+		_servletContext=_request.getServletContext();
+		_session=request.getSession();
+		_parameter=request.getParameter(RequestParameterKeys.param.toString());
+		_parameters=request.getParameterValues(RequestParameterKeys.param.toString()+"[]");
+		if(_sessionAttributeKey!=null)
+			_currentValue=(String)_session.getAttribute(_sessionAttributeKey.toString());			
+		
+		getCurrentNode(_parameter);
+		if(_currentNode==null)
+			getCurrentNode(_currentValue);
+		if(_currentNode==null && _refKey!=null && _parameter!=null)
+			_currentNode=GraphNode.get(_nodeLabel, _refKey, _parameter, false);
+	}
+	
+	public void setParameter(String parameter)
+	{
+		_parameter=parameter;
+	}
+	
+	public int getExpectedStatusMask() {
+		return _methodAccess.getAuthorizationLevel();
+	}	
+	
+	private void getCurrentNode(String parameter)
+	{
+		try
+		{			
+			if(parameter==null)
+				throw new NumberFormatException();
+			Long nodeId=Long.parseLong(parameter);
+			_currentNode=new GraphNode<NodeLabel>(nodeId);
+		}
+		catch(NumberFormatException nfe)
+		{
+		}		
+		if(_currentNode!=null && (!_currentNode.exists()))
+			_currentNode=null;
+	}
+	
+}

@@ -1,0 +1,47 @@
+package mamshops.admin.servlets;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import mamshops.libs.httpRequests.AbstractHttpRequest;
+import mamshops.libs.serviceLocators.ServiceLocator;
+import mamshops.libs.servletContexts.ServletContextPropertyKeys;
+import mamshops.libs.utils.PathConstructor;
+import mamshops.libs.velocity.VelocityManager;
+
+public class HtmlPageHttpRequest extends AbstractHttpRequest{
+	
+	protected static String ROOT_ID="template.parent.directory.webpages";	
+	
+	public HtmlPageHttpRequest() {
+		super(ROOT_ID);		
+	}
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response,String uri) throws IOException {
+		ServiceLocator sl=(ServiceLocator)request.getServletContext().getAttribute(ServletContextPropertyKeys.SERVICE_LOCATOR);
+		VelocityManager vm=sl.getService(VelocityManager.class);		 		 				 
+		PrintWriter pw=response.getWriter();		
+		try
+		{
+			vm.generateHtml(uri,request, pw);
+		}
+		catch(Exception rnfe)
+		{
+			System.out.println(rnfe);
+		}
+		pw.println();
+	}
+	
+	@Override
+	public String getURL(String fileName)
+	{				
+		String[] paths=new String[]{
+				_root,
+				fileName
+		};
+		return PathConstructor.getURL(paths);		
+	}			
+}

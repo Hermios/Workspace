@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename method &apos;mamshops.businessmodels.database.DatabaseManager.deconnect()&apos; to &apos;disconnect&apos;&#x0D;&#x0A;- Original project: &apos;Mamshops.BusinessModels&apos;&#x0D;&#x0A;- Original element: &apos;mamshops.businessmodels.database.DatabaseManager.deconnect()&apos;&#x0D;&#x0A;- Renamed element: &apos;mamshops.businessmodels.database.DatabaseManager.disconnect()&apos;&#x0D;&#x0A;- Update references to refactored element" delegate="false" deprecate="false" description="Rename method &apos;deconnect&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.method" input="/src&lt;mamshops.businessmodels.database{DatabaseManager.java[DatabaseManager~deconnect" name="disconnect" references="true" stamp="1398085146522" version="1.0"/>
+</session>

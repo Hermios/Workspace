@@ -1,0 +1,20 @@
+1399304863055	Rename type 'AbstractServletFilter'
+1399313651840	Copy compilation unit
+1399313752317	Rename type 'WebContentHelper'
+1399314029197	Rename field 'DYNAMIC_IMAGE_PARAMETER'
+1399314233674	Delete element
+1399314349858	Rename local variable 'httpRequest'
+1399314356374	Rename local variable 'httpResponse'
+1399362465303	Delete element
+1399371067738	Rename field 'DYNAMICCONTENT_ROOT'
+1399384027837	Rename type 'UrlContentHelper'
+1399386647897	Rename type 'WebContent'
+1399391324825	Rename method 'getFileRoot'
+1399413228760	Rename resource 'contenttype.properties'
+1399413235843	Move file
+1399546356277	Rename local variable 'ru'
+1399641230026	Delete element
+1399641901771	Move compilation unit
+1399642745722	Rename local variable 'paramValue'
+1399643861467	Rename type 'ActionTools'
+1399719450835	Rename local variable 'newUrl'

@@ -1,0 +1,7 @@
+package mamshops.user.getters;
+
+import mamshops.requests.getset.AbstractGetter;
+
+public class CommonUserGetter extends AbstractGetter{
+
+}

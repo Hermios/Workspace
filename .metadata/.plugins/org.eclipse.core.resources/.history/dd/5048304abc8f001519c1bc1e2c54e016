@@ -1,0 +1,34 @@
+package nikoBlex.requests.post;
+
+import java.util.HashMap;
+
+import javax.servlet.ServletContext;
+
+import nikoBlex.requests.getset.AbstractNodeSetter;
+import nikoBlex.requests.getset.AbstractSetter;
+import nikoBlex.tools.entries.ClassesManager;
+import nikoBlex.tools.serviceLocators.IServiceLocator;
+
+public class ActionHelpersManager<NodeLabel extends Enum<NodeLabel>> implements IServiceLocator{
+		HashMap<String, Class<? extends AbstractSetter>> _mapActionHelpers=new HashMap<>();
+		
+		public Class<? extends AbstractNodeSetter<NodeLabel>> getActionHelper(String key)
+		{
+			return _mapActionHelpers.get(key);
+		}
+
+		@Override
+		public void endServiceLocator() {
+		}
+
+		@Override
+		public void initServiceLocator(ClassesManager cm,ServletContext context) throws Exception {
+			for(Class<? extends AbstractSetter> actionHelper:cm.getClasses(AbstractSetter.class))
+				_mapActionHelpers.put(actionHelper.getSimpleName(), actionHelper);			
+		}
+		
+		public HashMap<String,Class<? extends AbstractNodeSetter<NodeLabel>>> getListActions()
+		{
+			return _mapActionHelpers;
+		}
+}

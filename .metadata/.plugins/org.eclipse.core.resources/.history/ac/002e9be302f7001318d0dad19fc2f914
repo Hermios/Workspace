@@ -1,0 +1,91 @@
+package mamshops.main.setters;
+
+import java.util.HashMap;
+
+import mamshops.businessmodels.DynamicImages.UserImageType;
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.enums.UserEnums.UserStatus;
+import mamshops.businessmodels.propertykeys.node.INodePropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.requests.getter.DynamicImageHelper;
+import mamshops.requests.keys.RequestParameterKeys;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.requests.post.AbstractSetter;
+import mamshops.requests.tools.UserMethodAccess;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+import mamshops.user.setters.UserSetter;
+
+public class NotConnectedSetter extends AbstractSetter{	
+	private final static String SESSION_TIMEOUT="session.timeout";
+	private final static String DEFAULT_PORTRAIT="defaultpicture.user.portrait";
+	
+	private String _attributeEmailId;
+	private String _attributePasswordId; 
+	
+	public NotConnectedSetter()
+	{
+		super(UserMethodAccess.none,null);
+		_attributeEmailId=PropertiesManager.getProperty(RequestParameterKeys.ATTRIBUTE_EMAIL_ID);
+		_attributePasswordId=PropertiesManager.getProperty(RequestParameterKeys.ATTRIBUTE_PASSWORD_ID);
+	}
+	
+	@HelperAnnotation(description="create a new user",inputParameter={RequestParameterKeys.ATTRIBUTE_EMAIL_ID,RequestParameterKeys.ATTRIBUTE_PASSWORD_ID})
+	public boolean createUser()
+	{		
+		String email=_request.getParameter(_attributeEmailId);
+		String password=GenericFunctions.getCryptedPassword(_request.getParameter(_attributePasswordId));
+		String[] parameters=_request.getParameterValues(PropertiesManager.getProperty(RequestParameterKeys.ATTRIBUTE_PARAMETER_ID)+"[]");
+		MamsNode newUser=MamsNode.create(NodeLabel.user, UserPropertyKey.email, email,false);
+		if(newUser==null)
+			return false;
+		
+		HashMap<INodePropertyKey,Object> listProperties=new HashMap<>();
+		listProperties.put(UserPropertyKey.password, password);
+		listProperties.put(UserPropertyKey.language, _request.getLocale().toLanguageTag());
+		listProperties.put(UserPropertyKey.codeValidation, GenericFunctions.getRandomString(15));
+		listProperties.put(UserPropertyKey.sex, parameters[0]);
+		listProperties.put(UserPropertyKey.name, parameters[1]);
+		listProperties.put(UserPropertyKey.status, UserStatus.privatestatus.toString());
+		newUser.setProperties(listProperties);
+		log();
+		UserSetter userSetter =new UserSetter(newUser);
+		userSetter.setParameter(parameters[2]);
+		userSetter.setCountry();
+		userSetter.addDeliveringCountry();
+				
+		try {
+			DynamicImageHelper.uploadDefaultImage(PropertiesManager.getProperty(DEFAULT_PORTRAIT), newUser.getId(), UserImageType.portrait);
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return true;
+	}
+		
+	@HelperAnnotation(description="Log, define the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_EMAIL_ID,RequestParameterKeys.ATTRIBUTE_PASSWORD_ID})
+	public String log()
+	{					
+		String email=_request.getParameter(_attributeEmailId);
+		String password=GenericFunctions.getCryptedPassword(_request.getParameter(_attributePasswordId));
+		MamsNode currentUser=MamsNode.get(NodeLabel.user, UserPropertyKey.email, email);
+		if(currentUser==null)
+			return "user doesn't exists";
+		if(currentUser.getProperty(UserPropertyKey.password).equals(password))
+		{
+			_session.invalidate();
+			_session=_request.getSession(true);
+			String parameter=_request.getParameter(_parameter);
+			if(parameter!=null && parameter.equals("true"))
+				_session.setMaxInactiveInterval(-1);
+			else			
+				_session.setMaxInactiveInterval(Integer.parseInt(PropertiesManager.getProperty(SESSION_TIMEOUT)));
+			
+			_session.setAttribute(SessionAttributeKeys.currentUser.toString(), currentUser.getId());
+			currentUser.setProperty(UserPropertyKey.lastIp,_request.getRemoteAddr());
+			return "";
+		}
+		return "Wrong password";
+	}	
+}

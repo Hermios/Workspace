@@ -1,0 +1,102 @@
+package nikoBlex.usecases.timeline;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import nikoBlex.businessmodels.database.GraphNode;
+import nikoBlex.businessmodels.database.GraphRelationship;
+import nikoBlex.businessmodels.enums.ICommonNode;
+import nikoBlex.businessmodels.relationships.types.CommentRelationshipType;
+import nikoBlex.businessmodels.relationships.types.TimeEventRelationshipType;
+import nikoBlex.requests.authorizationlevels.IUserAuthorization;
+import nikoBlex.requests.getset.AbstractNodeGetter;
+import nikoBlex.usecases.comment.AbstractCommentGetter;
+import nikoBlex.usecases.comment.IEnumComment;
+import nikoBlex.usecases.user.AbstractUserGetter;
+
+
+public abstract class AbstractTimeEventGetter<NodeLabel extends Enum<NodeLabel> & IEnumComment> extends AbstractNodeGetter<NodeLabel> {
+	public AbstractTimeEventGetter(IUserAuthorization authorizationLevel,NodeLabel nodeLabel) {
+		super(authorizationLevel, nodeLabel, null, null);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<AbstractTimeEventGetter<NodeLabel>> getRecursiveTimeEvent()
+	{
+		List<AbstractTimeEventGetter<NodeLabel>> result=new ArrayList<>();
+		List<GraphRelationship> listRels=_currentNode.getRelationships(TimeEventRelationshipType.nexttimeevent,true,false);
+		if(!listRels.isEmpty())
+		{
+			AbstractTimeEventGetter<NodeLabel> nextTimeEvent=construct(AbstractTimeEventGetter.class,listRels.get(0).getOtherNode(_currentNode.getId()));
+			result.add(nextTimeEvent);
+			result.addAll(nextTimeEvent.getRecursiveTimeEvent());
+		}
+		return result;
+	}
+	
+	@Override
+	public Calendar getCalendar() {
+		return super.getCalendar();
+	}
+	
+	public Long getDoublon()
+	{
+		String doublon=getAttribute(TimeEventPropertyKey.doublon, false);
+		return doublon.isEmpty()?null:Long.parseLong(doublon);
+	}
+	
+	public boolean isToCurrentUser()
+	{
+		return construct(AbstractUserGetter.class).getId().toString().equals(getAttribute(TimeEventPropertyKey.user, false));
+	}
+	
+	protected abstract String getObjectString(GraphNode node);
+
+	public String getUserPicture(boolean resize,boolean cut,Integer width,Integer height)
+	{
+		return getUser().getPortrait(resize, cut, width, height);
+	}
+	
+	public abstract String getPicture(boolean resize,boolean cut,Integer width,Integer height);
+	
+	
+	@SuppressWarnings("unchecked")
+	public AbstractUserGetter<NodeLabel> getUser()
+	{
+		Long id=Long.parseLong(getAttribute(TimeEventPropertyKey.user,true));
+		return construct(AbstractUserGetter.class,new GraphNode(id));
+	}
+	
+	public abstract String getDescription();
+	
+	
+	public String getType()
+	{
+		return getAttribute(TimeEventPropertyKey.type, false);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public List<AbstractCommentGetter<NodeLabel>> getCommentGetters()
+	{
+		return getRelatedNode(AbstractCommentGetter.class,CommentRelationshipType.target).getPreviousComments();
+	}
+
+	@Override
+	public void initialize(HttpServletRequest request) {
+		super.initialize(request);
+		if(_currentNode==null)
+			return;
+		_currentNode.getNodes(null, 1, true, TimeEventRelationshipType.reference);
+	}
+	
+	@Override
+	protected void setNode(GraphNode node) {
+		super.setNode(node);
+		if(_currentNode==null)
+			return;
+		_currentNode.getNodes(null, 1, true, TimeEventRelationshipType.reference);
+	}
+}

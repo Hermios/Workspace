@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<section name="Workbench">
+	<section name="conditionHistory">
+		<item value="2" key="conditionHistoryEntryCount"/>
+		<item value="result==true" key="conditionHistoryEntry_0"/>
+		<item value="result!=null &amp;&amp; result" key="conditionHistoryEntry_1"/>
+		<item value="uri.startsWith(&quot;/img&quot;)" key="conditionHistoryEntry_2"/>
+	</section>
+	<section name="org.eclipse.jdt.internal.debug.ui.ExpressionInformationControlCreator$ExpressionInformationControl">
+		<item value="503" key="SashWeightTree"/>
+		<item value="496" key="SashWeightDetails"/>
+		<item value="614" key="WIDTH"/>
+		<item value="194" key="HEIGHT"/>
+	</section>
+</section>

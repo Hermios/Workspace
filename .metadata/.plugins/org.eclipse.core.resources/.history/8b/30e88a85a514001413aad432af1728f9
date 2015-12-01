@@ -1,0 +1,68 @@
+package mamshops.user.getters;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.propertykeys.node.CommentPropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.relationships.types.CommentRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.main.getters.ShopGetter;
+import mamshops.requests.getset.AbstractGetter;
+
+public class CommentGetter extends AbstractGetter{
+
+	public CommentGetter() 
+	{
+		super(UserMethodAccess.user, null);
+	}
+
+	public String getDescription()
+	{
+		return getAttribute(CommentPropertyKey.description, true);
+	}
+	
+	public FriendGetter getUser()
+	{
+		return getRelatedNode(FriendGetter.class, CommentRelationshipType.user);
+	}
+	
+	public AbstractGetter getTarget()
+	{
+		NodeLabel label=getRelatedNode(AbstractGetter.class, CommentRelationshipType.target).getNode().getLabel();
+		
+		if(label==NodeLabel.timeevent)			
+			return getRelatedNode(TimeEventGetter.class, CommentRelationshipType.target);
+		if(label==NodeLabel.comment)			
+			return getRelatedNode(CommentGetter.class, CommentRelationshipType.target);
+		if(label==NodeLabel.user)			
+			return getRelatedNode(FriendGetter.class, CommentRelationshipType.target);
+		if(label==NodeLabel.shop)			
+			return getRelatedNode(ShopGetter.class, CommentRelationshipType.target);
+		if(label==NodeLabel.object)			
+			return getRelatedNode(ObjectGetter.class, CommentRelationshipType.target);
+		return null;
+	}
+
+	public List<FriendGetter> getLiked()
+	{
+		return getRelatedNodes(FriendGetter.class, CommentRelationshipType.like);
+	}
+	
+	public List<CommentGetter> getPreviousComments()
+	{		
+		List<CommentGetter> result=new ArrayList<>();
+		if(exists())
+			result.add(this);
+		List<MamsRelationship> listRels=_currentNode.getRelationships(CommentRelationshipType.target, true, false);
+		CommentGetter previousComment;
+		if(listRels.size()>0)
+		{
+			previousComment=construct(CommentGetter.class,listRels.get(0).getOtherNode(_currentNode.getId()));
+			if(previousComment.exists())
+				result.addAll(previousComment.getPreviousComments());
+		}
+		return result;
+	}
+}

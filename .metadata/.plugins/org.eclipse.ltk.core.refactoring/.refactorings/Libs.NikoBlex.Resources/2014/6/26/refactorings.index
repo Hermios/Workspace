@@ -1,0 +1,12 @@
+1403717711417	Rename field 'page'
+1403738775288	Delete element
+1403796363434	Rename local variable 'heifht'
+1403818511702	Rename local variable 'conn'
+1403818579882	Rename local variable 'in'
+1403854455209	Rename field 'apiKeyKey'
+1403854477500	Rename field 'apiKey'
+1403854519705	Rename field 'apiBaseUrl'
+1403862466738	Rename local variable 'fileRelativPath'
+1403863036180	Rename field 'SCREENSHOT_IMAGE_EXTENION'
+1403867588996	Move file
+1403964360863	Rename local variable 'filePermissions'

@@ -1,0 +1,27 @@
+package mamshops.businessmodels.filters;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.libs.annotations.HelperAnnotation;
+import mamshops.libs.businessmodels.Node;
+import mamshops.libs.businessmodels.NodeLabel;
+import mamshops.libs.velocity.IRequestVelocity;
+
+public class FilterVelocity implements IRequestVelocity{
+	Node _currentUser;
+	public FilterVelocity()	
+	{
+	}
+
+	@Override
+	public void setRequest(HttpServletRequest request) {
+		_currentUser=(Node)request.getSession().getAttribute(NodeLabel.filter.toString());		
+	}
+	
+	@HelperAnnotation(description="return the name of the shop",inputParameter="filter")
+	public String getName()
+	{		
+		//return _currentUser.getProperty(FilterP.NAME).toString();
+		return null;
+	}
+}

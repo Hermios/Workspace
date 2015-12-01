@@ -1,0 +1,5 @@
+package mamshops.businessmodels.containers;
+
+public class ContainerActionHelper {
+
+}

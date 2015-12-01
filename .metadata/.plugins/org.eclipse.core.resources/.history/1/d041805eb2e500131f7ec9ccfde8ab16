@@ -1,0 +1,195 @@
+package mamshops.user.getters;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.businessmodels.DynamicImages.UserImageType;
+import mamshops.businessmodels.node.MamsNode;
+import mamshops.businessmodels.propertykey.LocalizationPropertyKey;
+import mamshops.businessmodels.propertykey.UserPropertyKey;
+import mamshops.businessmodels.relationships.IMamsRelationshipType;
+import mamshops.main.getters.LocalizationGetter;
+import mamshops.main.getters.ShopGetter;
+import mamshops.relationships.types.UserRelationshipType;
+import mamshops.requests.dynamicContent.DynamicImageHelper;
+import mamshops.requests.httpRequest.RequestParameterKeys;
+import mamshops.requests.session.SessionAttributeKeys;
+import mamshops.requests.velocity.IRequestGetter;
+import mamshops.requests.velocity.UserExpectedStatus;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public class UserGetter implements IRequestGetter{
+	MamsNode _currentUser;
+	
+	public UserGetter(){}
+	
+	public UserGetter(Long nodeId)
+	{
+		_currentUser=new MamsNode(nodeId);
+	}
+				
+	@HelperAnnotation(description="return the first name of the user")
+	public String getFirstName()
+	{
+		return getAttribute(UserPropertyKey.firstname).toString();
+	}
+	
+	@HelperAnnotation(description="return the name of the user")
+	public String getName()
+	{		
+		getAttribute(UserPropertyKey.name).toString();
+	}
+	
+	@HelperAnnotation(description="return the language of the user")
+	public String getLocale()
+	{
+		return getAttribute(UserPropertyKey.language).toString();
+	}
+		
+	@HelperAnnotation(description="return the nationality of the user")
+	public String getNationality()
+	{
+		Long uniqueLong=getRelated(UserRelationshipType.nationality,1,false).get(0);
+		if(uniqueLong==null)
+			return "";
+		return new MamsNode(uniqueLong).getProperty(LocalizationPropertyKey.code).toString();
+	}
+	
+	@HelperAnnotation(description="return the current country where the user lives")
+	public LocalizationGetter getCountry()
+	{
+		Long uniqueLong=getRelated(UserRelationshipType.country,1,false).get(0);
+		if(uniqueLong==null)
+			return null;
+		return new LocalizationGetter(uniqueLong);
+	}
+		
+	@HelperAnnotation(description="return the current country where the user lives")
+	public List<LocalizationGetter> getDeliveringCountries()
+	{
+		List<LocalizationGetter> result=new ArrayList<>();
+		List<Long> listIds=getRelated(UserRelationshipType.country,null,false);
+		for(Long currentId:listIds)
+			result.add(new LocalizationGetter(currentId));
+		return result;
+	}
+
+	@HelperAnnotation(description="return true if the user choose a public status")
+	public boolean isPublic()
+	{
+		return getAttribute(UserPropertyKey.isPublic).equals("true");
+	}
+	
+	@HelperAnnotation(description="return true is the user is a male, false if she is a female, and null if it was not specified")
+	public boolean isMale()
+	{
+		return (boolean)getAttribute(UserPropertyKey.sex);
+	}
+	
+	@HelperAnnotation(description="return the city where the user lives")
+	public String getTown()
+	{
+		Long uniqueLong=getRelated(UserRelationshipType.town,1,false).get(0);
+		if(uniqueLong==null)
+			return "";
+		return new MamsNode(uniqueLong).getProperty(LocalizationPropertyKey.code).toString();
+	}
+	
+	@HelperAnnotation(description="return the email of the user")
+	public String getEmail()
+	{
+		return getAttribute(UserPropertyKey.email,true).toString();
+	}
+	
+	@HelperAnnotation(description="return the portrait of the user")
+	public String getPortrait(int width,int height)
+	{
+		try {
+			return DynamicImageHelper.getResizedDynamicImage(_currentUser.getId(),UserImageType.portrait, width, height);
+		} catch (Exception e) {			
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	@HelperAnnotation(description="saves in the session the relation between the current user and the friend defined (id)",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public FriendGetter getFriend(Long targetNode)
+	{				
+		return new FriendGetter(targetNode);				
+	}	
+	
+	@HelperAnnotation(description="return a list of friends for the current user")
+	public List<FriendGetter> getFriends(int count,boolean random)
+	{
+		List<Long> listIdFriends=getRelated(UserRelationshipType.friend, count, random);
+		List<FriendGetter> result=new ArrayList<>();
+		for(Long idFriend:listIdFriends)
+			result.add(new FriendGetter(idFriend));
+		return result;
+	}
+
+	@HelperAnnotation(description="return a list of shops for the current user")
+	public List<ShopGetter> getShops(int count,boolean random)
+	{
+		List<Long> listIdFriends=getRelated(UserRelationshipType.shop, count, random);
+		List<ShopGetter> result=new ArrayList<>();
+		for(Long idFriend:listIdFriends)
+			result.add(new ShopGetter(idFriend));
+		return result;
+	}
+	
+	private String getAttribute(UserPropertyKey key,boolean isMandatory)
+	{
+		if(_currentUser==null)
+			return null;
+		Object result=_currentUser.getProperty(key);
+		if(result!=null)
+			return result.toString();
+		if(isMandatory)
+			return null;
+		return "";
+	}
+	
+	private List<Long> getRelated(IMamsRelationshipType relType,Integer count,boolean random)
+	{
+		if(_currentUser==null)
+			return null;
+		List<Long> result=_currentUser.getRelationships(UserRelationshipType.town,true,true);
+		if(result==null || (count!=null && result.size()<=count))
+			return null;
+		if(count==null)
+			return result;
+		if(!random)
+			return result.subList(0, count-1);
+		List<Long> finalResult=new ArrayList<>();
+		while(finalResult.size()<count)
+		{
+			Long newIndex=result.get((int)Math.round(Math.random()*result.size()));
+			if(!finalResult.contains(newIndex))
+				finalResult.add(newIndex);			
+		}		
+		return finalResult;
+	}
+	
+	@HelperAnnotation(description="return true if the current user chose to keep the last visited page")
+	public boolean isSelectedPageKept()
+	{
+		return (boolean)_currentUser.getProperty(UserPropertyKey.keepVisitedFrame);
+	}
+
+	@Override
+	public void setRequest(HttpServletRequest request) throws Exception {
+		_currentUser=null;
+		Object userId=request.getSession().getAttribute(SessionAttributeKeys.currentUser.toString());
+		if(userId!=null)
+			_currentUser=new MamsNode((Long)userId);
+	}
+	
+	@Override
+	public UserExpectedStatus getExpectedStatus() {
+		return UserExpectedStatus.user;
+	}	
+	
+}

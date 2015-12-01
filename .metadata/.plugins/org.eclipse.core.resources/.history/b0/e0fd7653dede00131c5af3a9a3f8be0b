@@ -1,0 +1,128 @@
+package mamshops.requests.getters;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import mamshops.businessmodels.database.DatabaseManager;
+import mamshops.businessmodels.node.MamsNode;
+import mamshops.businessmodels.node.NodeLabel;
+import mamshops.businessmodels.propertykey.LocalizationPropertyKey;
+import mamshops.relationsips.types.LocalizationRelationshipKey;
+import mamshops.requests.session.SessionAttributeKeys;
+import mamshops.requests.velocity.IRequestGetter;
+import mamshops.requests.velocity.IStaticRequest;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public class LocalizationGetter implements IRequestGetter,IStaticRequest {
+	MamsNode _currentTown;
+	MamsNode _currentCountry;
+	HttpServletRequest _request;
+	Long _localCountryId;
+	
+	public LocalizationGetter()
+	{
+		
+	}
+	
+	public LocalizationGetter(Long id)
+	{
+		MamsNode currentLocalization=new MamsNode(id);
+		if(currentLocalization.getLabel().equals(NodeLabel.country.toString()))
+			_currentCountry=currentLocalization;
+		else _currentTown=currentLocalization;
+			
+	}
+	
+	public Long getCountryId()
+	{
+		return _currentCountry.getId();
+	}
+	
+	public Long getTownId()
+	{
+		return _currentTown.getId();
+	}
+	
+	public String getCountryName()
+	{
+		return _currentCountry==null?"":_currentCountry.getProperty(LocalizationPropertyKey.name).toString();
+	}
+
+	public String getTownName()
+	{
+		return _currentTown==null?"":_currentTown.getProperty(LocalizationPropertyKey.name).toString();
+	}
+
+	@HelperAnnotation(description="return the country of the current selected town")
+	public LocalizationGetter getCountry()
+	{
+		return new LocalizationGetter(_currentTown.getRelationships(LocalizationRelationshipKey.country, true, true).get(0));
+	}
+	
+	@HelperAnnotation(description="return all the towns of the current selected country")
+	public List<LocalizationGetter> getTowns()
+	{
+		List<Long> townsIds= _currentCountry.getRelationships(LocalizationRelationshipKey.country, true, true);
+		List<LocalizationGetter> result=new ArrayList<>();
+		for(Long id:townsIds)
+			result.add(new LocalizationGetter(id));
+		return result;
+	}
+	
+	@HelperAnnotation(description="return all the countries")
+	public List<LocalizationGetter> getAllCountries()
+	{
+		List<LocalizationGetter> result=new ArrayList<>();
+		for(Long nodeId:DatabaseManager.getNodes(NodeLabel.country))
+			result.add(new LocalizationGetter(nodeId));
+		return result;
+	}
+	
+	public Long getLocalCountryId()
+	{
+		if(_localCountryId==null)
+		{
+			String remoteAdress=_request.getRemoteAddr();
+			if(null==remoteAdress)
+				_localCountryId=(long)-1;
+			else
+			{
+				try {
+					Document doc=Jsoup.connect("http://api.hostip.info/?ip="+remoteAdress).get();
+					String countryNameLower= doc.getElementsByTag("countryName").get(0).text().toLowerCase();
+					char firstLetter=Character.toUpperCase(countryNameLower.charAt(0));
+					String countryName=firstLetter+countryNameLower.substring(1);
+					_localCountryId=DatabaseManager.findNodesByLabelAndProperty(NodeLabel.country, LocalizationPropertyKey.name, countryName).get(0);
+					if(_localCountryId==null)
+						_localCountryId=(long)-1;
+				} 
+				catch (IOException e) 
+				{
+					_localCountryId=(long)-1;
+				}
+			}
+		}
+		return _localCountryId;
+	}	
+	
+	@Override
+	public void setRequest(HttpServletRequest request) throws Exception {
+		_currentCountry=null;
+		_currentTown=null;
+		_localCountryId=null;
+		Long townId=(Long)request.getSession().getAttribute(SessionAttributeKeys.currentTown.toString());
+		Long countryId=(Long)request.getSession().getAttribute(SessionAttributeKeys.currentCountry.toString());
+		if(townId!=null)
+			_currentTown=new MamsNode(townId);
+		if(countryId!=null)
+			_currentCountry=new MamsNode(countryId);
+		_request=request;
+	}
+	
+}

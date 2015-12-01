@@ -1,0 +1,36 @@
+package mamshops.businessmodels.containers;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import mamshops.libs.businessmodels.Node;
+import mamshops.libs.businessmodels.NodeLabel;
+import mamshops.libs.businessmodels.propertykeys.ShopPropertyKey;
+import mamshops.libs.httpRequests.IActionHelper;
+
+public class ContainerActionHelper implements IActionHelper {
+	private String _attributeUrlId;
+	private String _attributeParameterId;
+	private HttpSession _session;
+	private HttpServletRequest _request;
+	private Node _currentContainer;
+	
+	public void selectContainer()
+	{				
+		String url=_request.getParameter(_attributeUrlId);		
+		Long currentShop=Node.getNode(NodeLabel.shop, ShopPropertyKey.url, url);
+		if(currentShop==null)
+			return;
+		_session.setAttribute(NodeLabel.shop.toString(), currentShop);			
+	}
+	
+	@Override
+	public void setRequest(HttpServletRequest request) {
+		_request=request;
+		_session=request.getSession();
+		Long containerId=(Long)_session.getAttribute(NodeLabel.shop.toString());
+		if(containerId!=null)
+		_currentContainer=new Node(containerId);
+	}
+
+}

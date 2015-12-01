@@ -1,0 +1,57 @@
+package mamshops.httpRequests.webcontent;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.velocity.exception.ResourceNotFoundException;
+
+import mamshops.httpRequests.AbstractHttpRequest;
+import mamshops.properties.PropertiesManager;
+import mamshops.serviceLocators.ServiceLocator;
+import mamshops.utils.PathConstructor;
+import mamshops.velocity.VelocityManager;
+
+public class HtmlPageHttpRequest extends AbstractHttpRequest{
+	
+	private final static String ERROR_404_PAGE_NAME="template.404.notfound.name";
+	private final static String DEFAULT_TEMPLATE="webpage.template.default.name";	
+	
+	protected static String ROOT_ID="template.parent.directory.webpages";	
+	
+	public HtmlPageHttpRequest() {
+		super(ROOT_ID);
+		// TODO Auto-generated constructor stub
+	}
+
+	@Override
+	public void doGet(HttpServletRequest request, HttpServletResponse response,String uri) throws IOException {
+		// TODO Auto-generated method stub
+		VelocityManager vm=(VelocityManager)ServiceLocator.getService(VelocityManager.class);		 		 				 
+		PrintWriter pw=response.getWriter();
+		try
+		{
+			vm.generateObject(uri, new HashMap<String,Object>(request.getParameterMap()), pw);
+		}
+		catch(ResourceNotFoundException rnfe)
+		{
+			if(!uri.endsWith(PropertiesManager.getProperty(ERROR_404_PAGE_NAME)))
+				vm.generateObject(PropertiesManager.getProperty(ERROR_404_PAGE_NAME), new HashMap<String,Object>(request.getParameterMap()), pw);			
+		}
+		pw.println();
+	}
+		
+	public static String getDefault()
+	{
+		String paths[]=new String[]
+		{
+				"",
+				PropertiesManager.getProperty(ROOT_ID),
+				PropertiesManager.getProperty(DEFAULT_TEMPLATE)
+		};		
+		return PathConstructor.getURL(paths);		
+	}		
+}

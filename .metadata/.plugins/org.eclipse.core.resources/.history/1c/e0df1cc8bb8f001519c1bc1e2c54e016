@@ -1,0 +1,57 @@
+package nikoBlex.requests.post;
+
+import java.io.PrintWriter;
+import java.lang.reflect.Method;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import nikoBlex.requests.getset.AbstractNodeSetter;
+import nikoBlex.requests.keys.ServletContextPropertyKeys;
+import nikoBlex.requests.tools.ContextManager;
+import nikoBlex.requests.tools.RequestGenericTools;
+import nikoBlex.tools.serviceLocators.ServiceLocator;
+
+public class ActionHelper {
+	public static <NodeLabel extends Enum<NodeLabel>> void doPost(HttpServletRequest request, HttpServletResponse response,int userStatusInt) throws InstantiationException, IllegalAccessException
+	{
+		String target=RequestGenericTools.getTarget(request);		
+		if(target.isEmpty())
+			return;
+		if(target.contains("/"))
+			target=target.substring(target.lastIndexOf("/")+1);
+		String[] targetData=target.split("\\.");
+		if(targetData.length!=2)
+			return;
+		ServiceLocator sl=(ServiceLocator)new ContextManager(request.getServletContext()).getAttribute(ServletContextPropertyKeys.serviceLocator);
+		ActionHelpersManager<NodeLabel> ahm=sl.getService(ActionHelpersManager.class);		
+		Class<? extends AbstractNodeSetter<NodeLabel>> classSetter=ahm.getActionHelper(targetData[0]);
+		AbstractNodeSetter<NodeLabel> setter=AbstractNodeSetter.construct(classSetter, request);
+		PrintWriter out=null;
+		try 
+		{
+			Object returnObject=null;			 	    
+			if(setter.getExpectedStatusMask()>userStatusInt)
+				returnObject="You don't have rights to start this command";				
+			else
+			{
+				Method invokingMethod=setter.getClass().getMethod(targetData[1]);
+				returnObject=invokingMethod.invoke(setter);
+			}
+			if(returnObject==null)
+				return;
+			out= response.getWriter();
+			response.setContentType("text/html;charset=UTF-8");
+	        out.println(returnObject.toString());
+		}
+	    catch (Exception e) 
+	    {		
+	    	e.printStackTrace();
+	    }
+		finally 
+		{
+			if(out!=null)
+		        out.close();
+	    }
+	}
+}

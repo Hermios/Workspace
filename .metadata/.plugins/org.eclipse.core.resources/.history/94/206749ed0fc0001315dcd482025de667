@@ -1,0 +1,26 @@
+package mamshops.businessmodels.shop;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.helpers.IRequestHelper;
+import mamshops.helpers.HelperAnnotation;
+
+public class ShopRequestHelper implements IRequestHelper{
+	HttpServletRequest _request;
+	Shop _currentUser;
+	public ShopRequestHelper()	
+	{
+	}
+
+	@Override
+	public void setRequest(HttpServletRequest request) {
+		_request=request;		
+		_currentUser=(Shop)request.getSession().getAttribute(ShopConstants.SHOP);		
+	}
+	
+	@HelperAnnotation(description="return the name of the shop",inputParameter=ShopConstants.SHOP)
+	public String getName()
+	{		
+		return _currentUser.getProperty(ShopConstants.NAME).toString();
+	}
+}

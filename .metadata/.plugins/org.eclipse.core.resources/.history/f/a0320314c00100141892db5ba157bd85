@@ -1,0 +1,69 @@
+package mamshops.user.getters;
+
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.relationships.types.UserRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.main.getters.CountryGetter;
+import mamshops.main.getters.TownGetter;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.resources.dynamicimages.DynamicImageHelper;
+import mamshops.resources.dynamicimages.UserImageType;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public abstract class CommonUserGetter extends AbstractGetter{
+
+	protected CommonUserGetter(UserMethodAccess userExpectedStatus,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(userExpectedStatus, sessionAttributeKey);
+	}
+		@HelperAnnotation(description="return the name of the friend")
+		public String getName()
+		{		
+			return getAttribute(UserPropertyKey.name, false);
+		}
+			
+
+		@HelperAnnotation(description="return true is the user is a male, false if she is a female, and null if it was not specified")
+		public String getSex()
+		{
+			return getAttribute(UserPropertyKey.sex,false);
+		}
+		
+		@HelperAnnotation(description="return the first name of the user")
+		public String getFirstName()
+		{
+			return getAttribute(UserPropertyKey.firstname,true);
+		}
+		
+		@HelperAnnotation(description="return the nationality of the friend")
+		public CountryGetter getNationality()
+		{	
+			return getRelatedNode(CountryGetter.class,UserRelationshipType.nationality);
+		}
+		
+		@HelperAnnotation(description="return the current country where the friend lives")
+		public CountryGetter getCountry()
+		{
+			return getRelatedNode(CountryGetter.class,UserRelationshipType.country);	
+		}
+				
+		@HelperAnnotation(description="return the city where the friend lives")
+		public TownGetter getTown()
+		{
+			return getRelatedNode(TownGetter.class,UserRelationshipType.town);		
+		}
+		
+
+		@HelperAnnotation(description="return the portrait of the user")
+		public String getPortrait(int width,int height)
+		{
+			try {
+				return DynamicImageHelper.getResizedDynamicImage(_currentNode.getId(),UserImageType.portrait, width, height);
+			} catch (Exception e) {			
+				e.printStackTrace();
+				return null;
+			}
+		}
+
+}

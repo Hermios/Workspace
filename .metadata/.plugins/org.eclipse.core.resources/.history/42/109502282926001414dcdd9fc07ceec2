@@ -1,0 +1,103 @@
+package mamshops.user.getters;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.relationships.types.CommentRelationshipType;
+import mamshops.businessmodels.relationships.types.TimeEventRelationshipType;
+import mamshops.businessmodels.relationships.types.UserRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.main.getters.CountryGetter;
+import mamshops.main.getters.TownGetter;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.resources.dynamicimages.DynamicImageHelper;
+import mamshops.resources.dynamicimages.UserImageType;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.utils.GenericFunctions;
+
+public abstract class CommonUserGetter extends AbstractGetter{
+		protected CommonUserGetter(UserMethodAccess methodAccess,SessionAttributeKeys sessionAttributeKey) 
+		{
+			super(methodAccess, NodeLabel.user, UserPropertyKey.email, sessionAttributeKey);
+		}
+
+		@HelperAnnotation(description="return the name of the friend")
+		public String getName()
+		{		
+			return getAttribute(UserPropertyKey.name, false);
+		}
+			
+		@HelperAnnotation(description="return true is the user is a male, false if she is a female, and null if it was not specified")
+		public String getSex()
+		{
+			return getAttribute(UserPropertyKey.sex,false);
+		}
+		
+		@HelperAnnotation(description="return the first name of the user")
+		public String getFirstName()
+		{
+			return getAttribute(UserPropertyKey.firstname,true);
+		}
+		
+		@HelperAnnotation(description="return the nationality of the friend")
+		public CountryGetter getNationality()
+		{	
+			return getRelatedNode(CountryGetter.class,UserRelationshipType.nationality);
+		}
+		
+		@HelperAnnotation(description="return the current country where the friend lives")
+		public CountryGetter getCountry()
+		{
+			return getRelatedNode(CountryGetter.class,UserRelationshipType.country);	
+		}
+				
+		@HelperAnnotation(description="return the city where the friend lives")
+		public TownGetter getTown()
+		{
+			return getRelatedNode(TownGetter.class,UserRelationshipType.town);		
+		}
+		
+		@HelperAnnotation(description="return the portrait of the user")
+		public String getPortrait(boolean resize, boolean cut,int width,int height)
+		{
+			try {
+				return DynamicImageHelper.getChangedImage(_currentNode.getId(),UserImageType.portrait, resize,cut,null,null,width, height);
+			} catch (Exception e) {			
+				e.printStackTrace();
+				return null;
+			}
+		}
+
+		public List<TimeEventGetter> getTimeEvents()
+		{
+			List<TimeEventGetter> result=new ArrayList<>();
+			TimeEventGetter firstTimeEvent=getRelatedNode(TimeEventGetter.class, TimeEventRelationshipType.nexttimeevent);
+			if(firstTimeEvent==null)
+				return result;
+			result.add(firstTimeEvent);
+			result.addAll(firstTimeEvent.getRecursiveTimeEvent());
+			return result;
+		}
+		
+		public List<List<CommentGetter>> getComments()
+		{
+			List<List<CommentGetter>> result=new ArrayList<>();
+			for(CommentGetter commentGetter:getRelatedNodes(CommentGetter.class,CommentRelationshipType.user))
+					result.add(commentGetter.getPreviousComments());
+			return result;
+		}
+		
+		@HelperAnnotation(description="return a list of friends for the current user")
+		public List<FriendGetter> getFriends(Integer count,boolean random)
+		{		
+			List<FriendGetter> result=new ArrayList<>();
+			for(MamsRelationship relationship:_currentNode.getRelationships(UserRelationshipType.friend, true, true))
+					result.add(construct(FriendGetter.class,relationship.getOtherNode(getId())));
+			return GenericFunctions.getEditedList(result,count,random);
+		}
+
+}

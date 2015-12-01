@@ -1,0 +1,5 @@
+package mamshops.user.getters;
+
+public abstract class CommonUserGetter extends AbtractG{
+
+}

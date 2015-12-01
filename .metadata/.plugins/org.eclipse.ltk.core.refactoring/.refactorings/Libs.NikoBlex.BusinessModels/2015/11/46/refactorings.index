@@ -1,0 +1,18 @@
+1447431168179	Rename package 'mamshops.businessmodels.database'
+1447431172728	Rename package 'mamshops.businessmodels.tools'
+1447431178915	Rename package 'mamshops.businessmodels.relationships.types'
+1447431185271	Rename package 'mamshops.businessmodels.propertykeys.node'
+1447431189496	Rename package 'mamshops.businessmodels.propertykeys'
+1447431193514	Rename package 'mamshops.businessmodels.properties'
+1447431199246	Rename package 'mamshops.businessmodels.enums'
+1447431215289	Rename type 'MamsNode'
+1447431221558	Rename type 'MamsRelationship'
+1447431237416	Delete element
+1447431285333	Delete element
+1447431295151	Delete element
+1447431308455	Delete element
+1447431342656	Rename type 'IMamsRelationshipType'
+1447431346099	Delete element
+1447431375343	Delete element
+1447431403466	Delete element
+1447432091336	Move packages

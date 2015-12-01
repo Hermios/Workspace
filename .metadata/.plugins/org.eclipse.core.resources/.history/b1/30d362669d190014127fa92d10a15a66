@@ -1,0 +1,133 @@
+package mamshops.user.getters;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.propertykeys.relationships.FriendshipPropertyKey;
+import mamshops.businessmodels.relationships.types.ShopRelationshipType;
+import mamshops.businessmodels.relationships.types.UserRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.main.getters.CountryGetter;
+import mamshops.main.getters.TownGetter;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+
+public class UserGetter extends BasicUserGetter{
+	
+	public UserGetter()
+	{
+		super(UserMethodAccess.user);
+	}
+					
+	@HelperAnnotation(description="return the first name of the user")
+	public String getFirstName()
+	{
+		return getAttribute(UserPropertyKey.firstname,false);
+	}
+	
+	@HelperAnnotation(description="return the nationality of the user")
+	public CountryGetter getNationality()
+	{
+		return getRelatedNode(CountryGetter.class, UserRelationshipType.nationality);		
+	}
+	
+	@HelperAnnotation(description="return the current country where the user lives")
+	public CountryGetter getCountry()
+	{
+		return getRelatedNode(CountryGetter.class, UserRelationshipType.country);
+	}
+		
+	@HelperAnnotation(description="return the current country where the user lives")
+	public List<CountryGetter> getDeliveringCountries()
+	{
+		return getRelatedNodes(CountryGetter.class,UserRelationshipType.deliveringcountry);
+	}
+
+	public boolean isNewDeliveringCountryAddeable()
+	{
+		return getDeliveringCountries().size()<Integer.parseInt(PropertiesManager.getProperty("user.max.deliveringcountries"));
+	}
+	
+	@HelperAnnotation(description="return true if the user choose a public status")
+	public String getStatus()
+	{
+		return getAttribute(UserPropertyKey.status,true);
+	}
+	
+	@HelperAnnotation(description="return the city where the user lives")
+	public TownGetter getTown()
+	{
+		return getRelatedNode(TownGetter.class,UserRelationshipType.town);
+	}
+			
+	@HelperAnnotation(description="return a list of friends for the current user")
+	public List<FriendGetter> getFriends(Integer count,boolean random)
+	{		
+		List<FriendGetter> result=new ArrayList<>();
+		for(MamsRelationship relationship:_currentNode.getRelationships(UserRelationshipType.friend, true, true))
+		{
+			if(relationship.getProperty(FriendshipPropertyKey.validate)!=null)
+				result.add(construct(FriendGetter.class,relationship.getOtherNode(getId())));
+		}
+		return GenericFunctions.getEditedList(result,count,random);
+	}
+
+	@HelperAnnotation(description="return a list of shops for the current user")
+	public List<UserShopGetter> getUserShops(boolean validated,Integer count,boolean random)
+	{
+		List<UserShopGetter> listUserShops=getRelatedNodes(UserShopGetter.class,UserRelationshipType.usershop);
+		listUserShops= GenericFunctions.getEditedList(listUserShops, count, random);
+		List<UserShopGetter> result=new ArrayList<>();
+		for(UserShopGetter userShopGetter:listUserShops)
+		{
+			if(userShopGetter.isValidated()==validated)
+				result.add(userShopGetter);
+		}
+		return result;
+	}
+		
+	public FollowerGetter getFollowing(boolean followers,Integer count, boolean random)
+	{
+		List<FollowerGetter> result=new ArrayList<>();
+		for(MamsNode node:_currentNode.getRelationships(UserRelationshipType.followers, followers, !followers))
+			result.add(construct(FollowerGetter.class, node));
+		return GenericFunctions.getEditedList(result, count, random;)
+	}
+	
+	public UserShopGetter getUserShop(Long shop)
+	{
+		UserShopGetter result=null;
+		List<MamsNode> listNodes=_currentNode.getNodes(new MamsNode(shop), false,UserRelationshipType.usershop,ShopRelationshipType.usershop);
+		
+		if(listNodes.size()>3)
+			return null;
+		Iterator<MamsNode> iterNodes=listNodes.iterator();
+		while(result==null && iterNodes.hasNext())
+		{
+			MamsNode endNode=iterNodes.next();
+			if(endNode.getLabel().equals(NodeLabel.usershop))
+				result=construct(UserShopGetter.class,endNode);
+		}
+		return result;
+	}
+	
+	public FriendGetter getFriend(Long friendId)
+	{
+		MamsNode friendNode=new MamsNode(friendId);
+		if(_currentNode.getRelationships(friendNode, UserRelationshipType.friend).isEmpty())
+			return null;
+		return construct(FriendGetter.class,friendNode);
+	}
+	
+	@HelperAnnotation(description="return true if the current user chose to keep the last visited page")
+	public boolean isSelectedPageKept()
+	{
+		return (boolean)_currentNode.getProperty(UserPropertyKey.keepVisitedFrame);
+	}	
+}

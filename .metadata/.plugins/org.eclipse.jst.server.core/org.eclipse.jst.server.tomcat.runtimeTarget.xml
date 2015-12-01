@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<classpath>
+  <source-attachment entry="D:/Mamshops/apache-tomcat-7.0.52/lib/catalina.jar" runtime-id="Apache Tomcat v7.0.52" source-attachment-path="D:/Mamshops/Workspace/Tests/src/apache-tomcat-7.0.52-src.zip"/>
+  <source-attachment entry="D:/Mamshops/apache-tomcat-7.0.52/lib/mamshops.jar" runtime-id="Apache Tomcat v7.0.52" source-attachment-path="/Mamshops.Libraries"/>
+  <source-attachment entry="D:/Mamshops/apache-tomcat-7.0.52/lib/others/mamshops.jar" runtime-id="Apache Tomcat v7.0.52" source-attachment-path="/Mamshops.Libraries"/>
+</classpath>

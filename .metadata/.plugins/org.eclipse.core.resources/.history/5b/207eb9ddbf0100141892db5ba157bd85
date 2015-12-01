@@ -1,0 +1,14 @@
+package mamshops.user.getters;
+
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+
+public abstract class CommonUserGetter extends AbstractGetter{
+
+	protected CommonUserGetter(UserMethodAccess userExpectedStatus,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(userExpectedStatus, sessionAttributeKey);
+	}
+
+}

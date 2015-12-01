@@ -1,0 +1,87 @@
+package mamshops.main.setters;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import mamshops.businessmodels.database.GraphDatabase;
+import mamshops.businessmodels.node.MamsNode;
+import mamshops.businessmodels.node.NodeLabel;
+import mamshops.businessmodels.propertykey.UserPropertyKey;
+import mamshops.requests.action.IAction;
+import mamshops.requests.httpRequest.RequestParameterKeys;
+import mamshops.requests.session.SessionAttributeKeys;
+import mamshops.requests.velocity.UserExpectedStatus;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+
+public class NotConnectedSetter implements IAction {	
+	private final static String SESSION_TIMEOUT="session.timeout";
+	
+	private String _attributeEmailId;
+	private String _attributePasswordId; 
+	private HttpSession _session;
+	private HttpServletRequest _request;
+	private MamsNode _currentUser;	
+	
+	public NotConnectedSetter()
+	{
+		_attributeEmailId=PropertiesManager.getProperty(RequestParameterKeys.ATTRIBUTE_EMAIL_ID);
+		_attributePasswordId=PropertiesManager.getProperty(RequestParameterKeys.ATTRIBUTE_PASSWORD_ID);				
+	}
+	
+	@HelperAnnotation(description="create a new user",inputParameter={RequestParameterKeys.ATTRIBUTE_EMAIL_ID,RequestParameterKeys.ATTRIBUTE_PASSWORD_ID})
+	public boolean createUser()
+	{		
+		String email=_request.getParameter(_attributeEmailId);
+		String password=GenericFunctions.getCryptedPassword(_request.getParameter(_attributePasswordId));
+		Long newUserId=MamsNode.create(NodeLabel.user, UserPropertyKey.email, email);
+		if(newUserId==null)
+			return false;
+		
+		GraphDatabase.setNodeProperty(newUserId, UserPropertyKey.password, password);
+		log();
+		_currentUser.setProperty(UserPropertyKey.language, _request.getLocale().toLanguageTag());
+		_currentUser.setProperty(UserPropertyKey.codeValidation, GenericFunctions.getRandomString(15));
+		return true;
+	}
+		
+	@HelperAnnotation(description="Log, define the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_EMAIL_ID,RequestParameterKeys.ATTRIBUTE_PASSWORD_ID})
+	public String log()
+	{					
+		String email=_request.getParameter(_attributeEmailId);
+		String password=GenericFunctions.getCryptedPassword(_request.getParameter(_attributePasswordId));
+		Long userNodeId=MamsNode.getNode(NodeLabel.user, UserPropertyKey.email, email);
+		if(userNodeId==null)
+			return "user doesn't exists";
+		_currentUser=new MamsNode(userNodeId);
+		if(_currentUser.getProperty(UserPropertyKey.password).equals(password))
+		{
+			_session.invalidate();
+			_session=_request.getSession(true);
+			int sessionTimeout=Integer.parseInt(PropertiesManager.getProperty(SESSION_TIMEOUT));
+			_session.setMaxInactiveInterval(sessionTimeout);
+			_session.setAttribute(SessionAttributeKeys.currentUser.toString(), userNodeId);
+			_currentUser.setProperty(UserPropertyKey.lastIp,_request.getRemoteAddr());
+			return "";
+		}
+		return "Wrong password";
+	}	
+	
+	@Override	
+	public void setParams(HttpServletRequest request, String paramValue) {
+		_currentUser=null;
+		_request=request;
+		_session=request.getSession();
+		if(_session==null)
+			return;
+		Object userId=_session.getAttribute(SessionAttributeKeys.currentUser.toString());
+		if(userId!=null)
+			_currentUser=new MamsNode((Long)userId);
+	}
+
+	@Override
+	public UserExpectedStatus getExpectedStatus() {
+		return UserExpectedStatus.none;	
+	}
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable &apos;tegcurrentTimeEventGetter&apos; in &apos;mamshops.user.getters.UserGetter.getSortedAllTimeEvents(...)&apos; to &apos;currentTimeEventGetter&apos;&#x0D;&#x0A;- Original project: &apos;Mamshops.Test&apos;&#x0D;&#x0A;- Original element: &apos;mamshops.user.getters.UserGetter.getSortedAllTimeEvents(boolean).tegcurrentTimeEventGetter&apos;&#x0D;&#x0A;- Renamed element: &apos;tegcurrentTimeEventGetter&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;tegcurrentTimeEventGetter&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;mamshops.user.getters{UserGetter.java[UserGetter~getSortedAllTimeEvents~Z@tegcurrentTimeEventGetter!4977!5040!4993!5017!QTimeEventGetter;!0!false" name="currentTimeEventGetter" references="true" stamp="1408119504842" version="1.0"/>
+</session>

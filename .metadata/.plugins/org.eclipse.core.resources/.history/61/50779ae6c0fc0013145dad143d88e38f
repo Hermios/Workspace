@@ -1,0 +1,195 @@
+package mamshops.resources.dynamicimages;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.Iterator;
+
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+import org.xhtmlrenderer.swing.Java2DRenderer;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.propertykeys.node.GenericPropertyKey;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+import mamshops.tools.utils.PathConstructor;
+
+public class DynamicImageManager {
+	private final static String DYNAMIC_IMAGES_ROOT="dynamic.images.root";
+	private final static String DYNAMIC_IMAGES_TEMPLATE="dynamic.images.template";
+	private final static String DYNAMIC_IMAGES_RESIZED="dynamic.images.resized";
+	private final static String DYNAMIC_IMAGES_SUBIMAGES="dynamic.images.subimages";
+	
+	private BufferedImage _bufferedImage;
+	private String _extension;
+	private MamsNode _node;
+	private String _nodeRoot;
+	private String _nodeLabel;
+	private File _templateFile;
+	public DynamicImageManager(Long id,IImageType category) throws IOException
+	{		
+		_node=new MamsNode(id);
+		_nodeLabel=_node.getLabel().toString();
+		_nodeRoot=PathConstructor.getPath(new String[]{_nodeLabel.toString(),category.toString()});
+		_extension=(String)_node.getProperty(GenericPropertyKey.imageExtension);
+		if(_extension!=null)
+			_extension=_extension.toLowerCase();
+		setTemplateFile();
+		if(!_templateFile.exists())
+			return;
+		BufferedImage image=ImageIO.read(_templateFile);
+		_bufferedImage=new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graph2D=_bufferedImage.createGraphics();
+		graph2D.drawImage(image, 0, 0, null);
+		graph2D.dispose();
+	}
+	
+	private void setTemplateFile()
+	{
+		_templateFile=new File(PathConstructor.getPath(new String[]{
+				PropertiesManager.getProperty(DYNAMIC_IMAGES_ROOT),
+				PropertiesManager.getProperty(DYNAMIC_IMAGES_TEMPLATE),
+				_nodeRoot}),_node.getId()+"."+_extension);				
+	}
+	
+	public void createImageForNode(InputStream imageStream,String extension) throws IOException
+	{				
+		removeImagesFromId();
+		_extension=extension;
+		_node.setProperty(GenericPropertyKey.imageExtension, _extension);
+		setTemplateFile();
+		_bufferedImage=ImageIO.read(imageStream);
+		if(!_templateFile.getParentFile().exists())
+			_templateFile.getParentFile().mkdirs();			
+		
+		saveImage(_templateFile, _bufferedImage);
+	}
+	
+	public void createImageFromUrl(String url) throws IOException
+	{				
+		removeImagesFromId();
+		_extension=extension;
+		_node.setProperty(GenericPropertyKey.imageExtension, _extension);
+		setTemplateFile();
+		Java2DRenderer renderer = new Java2DRenderer(url,1024);
+		renderer.setBufferedImageType(BufferedImage.TYPE_INT_RGB);
+		_bufferedImage=renderer.getImage();
+		if(!_templateFile.getParentFile().exists())
+			_templateFile.getParentFile().mkdirs();			
+		
+		saveImage(_templateFile, _bufferedImage);
+	}
+	
+	public void removeImagesFromId()
+	{
+		removeImagesInDir(DYNAMIC_IMAGES_TEMPLATE);
+		removeImagesInDir(DYNAMIC_IMAGES_RESIZED);
+		removeImagesInDir(DYNAMIC_IMAGES_SUBIMAGES);
+	}
+	
+	private void removeImagesInDir(String rootPropertyKey)
+	{
+		String[] dirPaths=new String[]
+		{
+			PropertiesManager.getProperty(DYNAMIC_IMAGES_ROOT),
+			PropertiesManager.getProperty(rootPropertyKey),
+			_nodeLabel
+		};
+		File mainParentDir=new File(PathConstructor.getPath(dirPaths));		
+		if(!mainParentDir.exists())
+			return;
+		IOFileFilter fileFilter=new IOFileFilter() {
+			
+			
+			public boolean accept(File file, String arg) {
+				return false;
+			}
+						
+			public boolean accept(File file) {
+				return file.getAbsolutePath().endsWith(_templateFile.getName());
+			}
+		};
+		Collection<File> files=FileUtils.listFiles(mainParentDir, fileFilter, TrueFileFilter.INSTANCE);	
+		for (Iterator<File> iterator = files.iterator(); iterator.hasNext();) {
+            iterator.next().delete();
+		}		
+	}
+
+	public String resize(int width, int height) throws IOException 
+	{
+		if(!_templateFile.exists())
+			return null;
+		String[] path=new String[]
+		{
+				PropertiesManager.getProperty(DYNAMIC_IMAGES_ROOT),
+				PropertiesManager.getProperty(DYNAMIC_IMAGES_RESIZED),
+				_nodeRoot,
+				width+"x"+height
+		};		
+		File resizedImageFile=new File(PathConstructor.getPath(path),_templateFile.getName());
+		if(!resizedImageFile.exists())
+		{
+			int templateHeight=_bufferedImage.getHeight();
+			int templateWidth=_bufferedImage.getWidth();
+			double sizeFactor=((double)templateHeight)/((double)templateWidth);
+			if(templateHeight<height)
+				height=templateHeight;
+			if(templateWidth<width)
+				width=templateWidth;
+			if(width*sizeFactor>height)
+				width=(int)Math.floor(height/sizeFactor);
+			else
+				height=(int)Math.floor(width*sizeFactor);
+			Image image = _bufferedImage.getScaledInstance(width, height, BufferedImage.SCALE_SMOOTH);
+			BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+			Graphics2D g = resizedImage.createGraphics();
+			g.drawImage(image, 0, 0, width, height, new Color(0,0,0),null);
+			g.dispose();
+			saveImage(resizedImageFile, resizedImage);
+		}
+		return resizedImageFile.getAbsolutePath().replace(PropertiesManager.getProperty(DYNAMIC_IMAGES_ROOT),"");
+	}
+		
+	public String setSubImage(String subImagePath,int x,int y, int width, int height) throws IOException
+	{
+		if(!_templateFile.exists())
+			return null;
+		String[] path=new String[]
+		{
+				PropertiesManager.getProperty(DYNAMIC_IMAGES_ROOT),
+				PropertiesManager.getProperty(DYNAMIC_IMAGES_SUBIMAGES),
+				_nodeRoot,
+				x+"_"+y+"_"+width+"_"+height
+		};
+		File subImageFile=new File(PathConstructor.getPath(path),_templateFile.getName());
+		if(!subImageFile.exists())
+		{
+			BufferedImage bi=_bufferedImage.getSubimage(x,y, width, height);
+			saveImage(subImageFile, bi);
+		}
+		return subImageFile.getAbsolutePath();
+	}
+	
+	public static String getDynamicImagesRoot()
+	{
+		return PropertiesManager.getProperty(DYNAMIC_IMAGES_ROOT);
+	}
+	
+	private void saveImage(File file,BufferedImage bi) throws IOException
+	{
+		if(file.exists())
+			file.delete();
+		else if(!file.getParentFile().exists())
+		file.getParentFile().mkdirs();		
+	    ImageIO.write(bi,GenericFunctions.getFileExtension(file.getAbsolutePath()).toLowerCase(), file);
+	}	
+}

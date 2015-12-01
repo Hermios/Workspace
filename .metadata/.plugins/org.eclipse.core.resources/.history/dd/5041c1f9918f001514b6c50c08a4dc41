@@ -1,0 +1,12 @@
+package nikoBlex.businessmodels.enums;
+
+import nikoBlex.businessmodels.database.GraphNode;
+
+public class test {
+
+	public void testMethod()
+	{
+		GraphNode titi=new GraphNode((long)10000);
+		titi.getNodes(TestEnum)
+	}
+}

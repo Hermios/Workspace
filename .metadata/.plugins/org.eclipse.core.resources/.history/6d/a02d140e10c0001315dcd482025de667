@@ -1,0 +1,89 @@
+package mamshops.businessmodels.user;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+
+import mamshops.database.DatabaseManager;
+import mamshops.helpers.IRequestHelper;
+import mamshops.helpers.HelperAnnotation;
+import mamshops.properties.PropertiesManager;
+import mamshops.serviceLocators.ServiceLocator;
+
+public class UserRequestHelper implements IRequestHelper{
+	HttpServletRequest _request;
+	User _currentUser;
+	GraphDatabaseService _graphDB;
+	HttpSession _session;
+	private String _attributeParameterId;
+	
+	public UserRequestHelper()	
+	{ 
+		DatabaseManager dm=ServiceLocator.getInstance().getService(DatabaseManager.class);
+		_graphDB=dm.getGraph();		
+		_attributeParameterId=PropertiesManager.getProperty(UserConstants.ATTRIBUTE_PARAMETER_ID);
+	}
+
+	@Override
+	public void setRequest(HttpServletRequest request) {
+		_request=request;		
+		_session=request.getSession();
+		_currentUser=(User)_session.getAttribute(UserConstants.USER);		
+	}
+		
+	@HelperAnnotation(description="return the first name of the user",inputParameter=UserConstants.USER)
+	public String getName()
+	{		
+		return _currentUser.getProperty(UserConstants.NAME).toString();
+	}
+	
+	@HelperAnnotation(description="return the language of the user",inputParameter=UserConstants.USER)
+	public String getLocale()
+	{
+		return _currentUser.getProperty(UserConstants.LANGUAGE).toString();
+	}
+		
+	@HelperAnnotation(description="return the nationality of the user",inputParameter=UserConstants.USER)
+	public String getNationality()
+	{
+		return _currentUser.getProperty(UserConstants.NATIONALITY).toString();
+	}
+	
+	@HelperAnnotation(description="return the current country where the user lives",inputParameter=UserConstants.USER)
+	public String getCountry()
+	{
+		return _currentUser.getProperty(UserConstants.COUNTRY).toString();
+	}
+		
+	@HelperAnnotation(description="return true if the user choose a public status",inputParameter=UserConstants.USER)
+	public boolean isPublic()
+	{
+		return (boolean)_currentUser.getProperty(UserConstants.IS_PUBLIC);
+	}
+	
+	@HelperAnnotation(description="return true is the user is a male, false if she is a female, and null if it was not specified",inputParameter=UserConstants.USER)
+	public boolean isMale()
+	{
+		return (boolean)_currentUser.getProperty(UserConstants.SEX);
+	}
+	
+	@HelperAnnotation(description="return the city where the user lives",inputParameter=UserConstants.USER)
+	public String getTown()
+	{
+		return _currentUser.getProperty(UserConstants.TOWN).toString();
+	}
+	
+	@HelperAnnotation(description="saves in the session the relation between the current user and the friend defined (id)",inputParameter={UserConstants.USER,UserConstants.ATTRIBUTE_PARAMETER_ID})
+	public boolean findFriend()
+	{		
+		Node targetNode=_graphDB.getNodeById(Long.parseLong(_request.getParameter(_attributeParameterId)));
+		Relationship rel=_currentUser.GetRelationship(targetNode,UserRelationships.Friendship);
+		if(rel==null)
+			return false;
+		_session.setAttribute(UserConstants.USER_FRIENDSHIP, rel);
+		return true;
+	}	
+}

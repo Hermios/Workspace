@@ -1,0 +1,25 @@
+package nikoBlex.usecases.user;
+
+public Interface AbstractUserAuthorizationLevel {
+	
+	public Interface AuthorizationLevelsEnum{
+		private AuthorizationLevelsEnum(int mask)
+		{
+			this.mask=mask;
+		}
+		
+	    public int getMask()
+	    {
+	        return mask;
+	    }
+
+	};
+	public AuthorizationLevelsEnum AuthorizationLEvel; 
+	private final int mask;	
+	
+
+	public AbstractUserAuthorizationLevel(AuthorizationLevelsEnum authorizationLevel) {
+    	this.AuthorizationLEvel = authorizationLevel;    	
+	}
+
+}

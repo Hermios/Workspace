@@ -1,0 +1,58 @@
+package mamshops.user.setters;
+
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.admin.setters.ShopSetter;
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserShopPropertyKey;
+import mamshops.businessmodels.relationships.types.ShopRelationshipType;
+import mamshops.requests.getset.AbstractGetSet;
+import mamshops.requests.getset.AbstractSetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.requests.tools.UserMethodAccess;
+import mamshops.user.getters.UserShopGetter;
+
+public class UserShopSetter extends AbstractSetter{
+
+	public UserShopSetter() {
+		super(UserMethodAccess.user, null);
+	}
+		
+	
+	public void create()
+	{
+		ShopSetter shopSetter=AbstractGetSet.construct(ShopSetter.class,_request);
+		shopSetter.addShop();
+		UserShopGetter usg=AbstractGetSet.construct(UserShopGetter.class, _request);
+		if(!usg.exists())
+		{
+			Object shopId=_session.getAttribute(SessionAttributeKeys.currentShop.toString());
+			if(shopId==null)
+				throw new NullPointerException();
+			Object userId=_session.getAttribute(SessionAttributeKeys.currentUser.toString());
+			if(userId==null)
+				throw new NullPointerException();			
+			MamsNode userShopNode=MamsNode.create(NodeLabel.usershop, mamshops.businessmodels.propertykeys.node.UserShopPropertyKey.user_shop, userId+"_"+shopId, true);
+			
+			userSetter.
+			MamsNode shop=new MamsNode(shopId);
+			shop.createRelationship(userShopNode.getId(), ShopRelationshipType.usershop);
+		}
+		
+	}
+	
+	@Override
+	public void initialize(HttpServletRequest request) {
+		super.initialize(request);
+		Object userId=_session.getAttribute(SessionAttributeKeys.currentUser.toString());
+		if(userId==null)
+			return;
+		Object shopId=_session.getAttribute(SessionAttributeKeys.currentShop.toString());
+		if(shopId==null)
+			return;
+		_currentNode=MamsNode.get(NodeLabel.usershop, UserShopPropertyKey.user_shop, userId.toString()+"_"+shopId.toString());
+	}
+	
+}

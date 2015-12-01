@@ -1,0 +1,5 @@
+package nikoBlex.requests.getset;
+
+public interface ISetter {
+
+}

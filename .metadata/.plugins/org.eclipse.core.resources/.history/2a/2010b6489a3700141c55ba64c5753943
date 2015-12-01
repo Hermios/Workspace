@@ -1,0 +1,7 @@
+package mamshops.admin.setters;
+
+import mamshops.requests.getset.AbstractSetter;
+
+public class AdminMethods extends AbstractSetter{
+	public 
+}

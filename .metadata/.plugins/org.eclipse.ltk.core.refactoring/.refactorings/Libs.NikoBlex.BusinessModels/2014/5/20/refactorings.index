@@ -1,0 +1,15 @@
+1400001483691	Rename method 'createCompressedImage'
+1400049881196	Rename local variable 'resizedModel'
+1400057861430	Rename type 'MamsRelationshipType'
+1400057904573	Copy package
+1400057974430	Rename type 'ContainerPropertyKey'
+1400057981342	Rename type 'FilterPropertyKey'
+1400057988102	Rename type 'GenericPropertyKey'
+1400057992409	Delete element
+1400057999076	Rename type 'LocalizationPropertyKey'
+1400058005641	Rename type 'ShopPropertyKey'
+1400058011964	Rename type 'UserPropertyKey'
+1400063397774	Rename package 'mamshops.businessmodels.propertykeys'
+1400063408909	Rename package 'mamshops.Relationships.propertykeys'
+1400063413418	Rename package 'mamshops.relationsips.propertykey'
+1400166583135	Delete element

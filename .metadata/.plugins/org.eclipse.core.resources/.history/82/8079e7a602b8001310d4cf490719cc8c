@@ -1,0 +1,7 @@
+package mamshops.admin.tools;
+
+import javax.servlet.http.HttpServletRequest;
+
+public interface IToolsHttpRequest{
+	void Initialise(HttpServletRequest request);
+}

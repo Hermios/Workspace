@@ -1,0 +1,34 @@
+package mamshops.servlet;
+
+
+import javax.servlet.ServletContextEvent;
+
+import org.apache.catalina.core.StandardContext;
+
+import mamshops.libs.servletContexts.AbstractApplicationServletContextListener;
+import mamshops.libs.servletContexts.ServletContextPropertyKeys;
+import mamshops.libs.utils.ContextTools;
+
+public class ApplicationServletContextListener extends AbstractApplicationServletContextListener{
+	private static boolean started=false;
+	@Override
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		if(started)
+			return;		
+		super.contextInitialized(servletContextEvent);
+		try
+		{
+			StandardContext ctx=ContextTools.getCurrentContext(servletContextEvent.getServletContext().getContextPath());
+			ctx.setAliases("/WebContent=D:\\Mamshops\\frontend");
+			Mapper mapper = ctx.getMapper();
+		    mapper.addHostAlias("localhost", "/WebContent=D:\\Mamshops\\frontend");
+			
+		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		servletContextEvent.getServletContext().setAttribute(ServletContextPropertyKeys.CLASSES_MANAGER, _cm.getAllClasses());		
+		started=true;
+	}
+}

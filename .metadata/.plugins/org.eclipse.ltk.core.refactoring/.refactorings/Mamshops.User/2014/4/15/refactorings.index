@@ -1,0 +1,79 @@
+1396912001121	Move compilation unit
+1396954623688	Rename local variable 'shopId'
+1396963001406	Delete element
+1396990937296	Rename type 'ShopRequestHelper'
+1396991437572	Rename type 'UserRequestHelper'
+1396991457225	Rename type 'Shop'
+1396991466387	Rename type 'User'
+1396991745505	Delete element
+1396992188352	Rename type 'FilterRequestHelper'
+1396992195016	Rename type 'ContainerRequestHelper'
+1397051458217	Copy package
+1397051467675	Copy packages
+1397057121899	Move compilation unit
+1397057125844	Delete element
+1397057398943	Rename type 'HtmlPageHttpRequest'
+1397057411365	Rename type 'HtmlMailHttpRequest'
+1397057421334	Rename type 'ScriptHttpRequest'
+1397057467641	Rename type 'StyleHttpRequest'
+1397057473865	Rename type 'ImageHttpRequest'
+1397057481738	Delete element
+1397057712267	Rename package 'mamshops.httpRequests.webcontent'
+1397058716758	Rename field 'DEFAULT_TEMPLATE'
+1397066317989	Copy packages
+1397067888945	Delete element
+1397078337895	Copy package
+1397078443962	Copy package
+1397078478085	Copy package
+1397078505829	Delete element
+1397078512095	Move package
+1397078519513	Move package
+1397078524191	Move package
+1397078584488	Delete element
+1397078594793	Delete element
+1397078645467	Delete element
+1397078650491	Delete element
+1397078668248	Delete element
+1397078724140	Move package
+1397079606315	Delete element
+1397079757378	Rename package 'mamshops.libs.relationships'
+1397079762012	Delete element
+1397079763867	Delete element
+1397079765741	Delete element
+1397080201826	Move compilation unit
+1397080950504	Move compilation unit
+1397081961611	Move compilation unit
+1397082121462	Delete element
+1397083102520	Move compilation unit
+1397083108780	Delete element
+1397083639999	Rename local variable 'currentContainerId'
+1397121284122	Rename type 'ActionHelperSelector'
+1397123764307	Move compilation unit
+1397123876847	Move compilation unit
+1397123882679	Delete element
+1397124244015	Move compilation unit
+1397124294057	Rename type 'UserActionHelper'
+1397124303902	Copy compilation unit
+1397124534837	Delete element
+1397141185290	Move package
+1397141296611	Move package
+1397153121860	Rename package 'mamshops.libs.getters'
+1397153374914	Rename package 'mamshops.libs.helpers'
+1397153388248	Rename package 'mamshops.webContents.helpers'
+1397162760797	Rename package 'mamshops.httpRequests.Action'
+1397162776735	Rename type 'ShopCreator'
+1397163733308	Move package
+1397164693111	Move compilation unit
+1397165447977	Rename package 'mamshops.libs.webcontenthelpers'
+1397170388286	Rename field '_currentUser'
+1397201130874	Move compilation unit
+1397201291820	Rename type 'Selector'
+1397202757070	Rename package 'mamshops.setters'
+1397202766737	Rename package 'mamshops.getters'
+1397205584481	Rename package 'mamshops.friendships'
+1397205595750	Rename type 'Friendship'
+1397205609691	Move compilation unit
+1397205638731	Rename type 'FriendshipGeter'
+1397206244939	Copy compilation unit
+1397206250231	Rename type 'FriendshipGetter'
+1397206448580	Rename field 'currentUserId'

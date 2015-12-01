@@ -1,0 +1,49 @@
+1447434326538	Copy package
+1447434330882	Delete element
+1447434334102	Delete element
+1447435989475	Move compilation unit
+1447436007967	Move compilation unit
+1447436096644	Move compilation unit
+1447437083020	Move compilation unit
+1447437182653	Copy compilation unit
+1447437294102	Rename type 'NodeLabel'
+1447441047488	Move compilation units
+1447441071478	Rename method 'getListMamsNode'
+1447441131594	Rename local variable 'mamsNode'
+1447441190922	Move compilation unit
+1447441206617	Move package
+1447441748723	Rename package 'nikoBlex.businessmodels.authorizationLevels'
+1447441818384	Move compilation unit
+1447441895847	Move compilation units
+1447441900005	Move compilation unit
+1447441917972	Delete element
+1447441928075	Delete element
+1447442025520	Rename compilation unit 'INodeLabel.java'
+1447451280694	Rename compilation unit 'NodeLabel.java'
+1447451461799	Rename type 'nodeLabels'
+1447451638314	Rename method 'getUserStatus'
+1447452063428	Rename type 'User'
+1447452369828	Rename type 'NodeLabels'
+1447452578538	Delete element
+1447453209324	Rename compilation unit 'UserMethodAccess.java'
+1447453264365	Rename type 'authorizationLevels'
+1447508270366	Rename type 'AuthorizationLevel'
+1447509897901	Copy package
+1447509907422	Delete element
+1447509927895	Copy package
+1447509935452	Copy package
+1447509940772	Delete element
+1447509971548	Move compilation unit
+1447509975999	Move compilation unit
+1447509979588	Delete element
+1447510058733	Delete element
+1447510083747	Move compilation unit
+1447510105423	Delete element
+1447510122264	Delete element
+1447510300537	Rename type 'CountryGetter'
+1447510412776	Rename type 'LocalizationPropertyKey'
+1447510713206	Move compilation unit
+1447511591461	Rename type 'TimeEventGetter'
+1447512059509	Rename package 'nikoBlex.usecases.countries'
+1447512102381	Rename type 'CommentGetter'
+1447512110362	Rename type 'CommentSetter'

@@ -1,0 +1,14 @@
+package mamshops.businessmodels.containers;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.libs.httpRequests.IActionHelper;
+
+public class ContainerActionHelper implements IActionHelper {
+
+	@Override
+	public void setRequest(HttpServletRequest request) {
+		
+	}
+
+}

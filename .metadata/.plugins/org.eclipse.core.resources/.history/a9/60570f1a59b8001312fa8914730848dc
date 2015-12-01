@@ -1,0 +1,90 @@
+package mamshops.servlet;
+
+import java.util.ResourceBundle;
+
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import mamshops.libs.database.DatabaseManager;
+import mamshops.libs.entries.ClassesManager;
+import mamshops.libs.entries.PropertiesLoader;
+import mamshops.libs.entries.PropertiesManager;
+import mamshops.libs.serviceLocators.IServiceLocator;
+import mamshops.libs.serviceLocators.ServiceLocator;
+
+public class ApplicationServletContextListener implements ServletContextListener{
+	private static final String EXCEPTION_STOP_SERVER="server.exception.interrupt";
+	
+	@Override
+	public void contextDestroyed(ServletContextEvent servletContextEvent) {
+		for(IServiceLocator serviceLocator:ServiceLocator.getAllServices())
+		{
+			serviceLocator.EndServiceLocator();
+			System.out.println(serviceLocator.getClass().getName() + " is closed");
+		}
+		System.out.println("Server closed");
+		
+		System.out.println("Clear ressources");
+		ResourceBundle.clearCache();		
+		System.out.println("ressources cleared");
+
+		System.out.println("Clear Singletons");
+		ServiceLocator.clear();
+		ClassesManager.clear();
+		PropertiesManager.clear();
+		System.out.println("Singletons cleared");
+	}
+
+	@Override
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		System.out.println("Starting context Main");
+		String root=servletContextEvent.getServletContext().getRealPath("");		
+		
+		System.out.println("Load properties");
+		try {
+			PropertiesLoader pl=new PropertiesLoader(servletContextEvent.getServletContext());
+			PropertiesManager.loadProperties(pl.getAllProperties(),pl.getPropertiesPath());
+		} catch (Exception e2) {
+			e2.printStackTrace();
+			System.out.println("ERROR WHILE LOADING PROPERTIES");
+			return;
+		}
+		System.out.println("Properties loaded");
+				
+		boolean stopOnError=PropertiesManager.getProperty(EXCEPTION_STOP_SERVER).equals("true");
+		
+		System.out.println("Load classes");
+		try {
+			ClassesManager.init(root,getClass().getClassLoader());
+			System.out.println("Classes loaded");
+		} catch (Exception e1) {
+			System.out.println("ERROR WHILE Loading classes");
+			e1.printStackTrace();
+			if(stopOnError)
+			{
+				java.lang.System.exit(1); 
+				return;
+			}						
+		}
+		
+		System.out.println("Initialize Services");		
+		try {
+			ServiceLocator.init(stopOnError);
+		} catch (Exception e) {
+			System.out.println("ERROR WHILE INITIALIZING ServiceLocator");
+			e.printStackTrace();
+			if(stopOnError)
+			{
+				java.lang.System.exit(1); 
+				return;
+			}						
+		}
+		System.out.println("Initialize Services");
+		
+		DatabaseManager dm=ServiceLocator.getService(DatabaseManager.class);		
+		servletContextEvent.getServletContext().setAttribute("databaseManager", dm);
+		servletContextEvent.getServletContext().setAttribute("classesManager", ClassesManager.getAllClasses());
+		System.out.println("Context Main started");
+	}
+
+}

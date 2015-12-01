@@ -1,0 +1,9 @@
+package nikoBlex.requests.authorizationlevels;
+
+import javax.servlet.http.HttpSession;
+
+public abstract class AuthorizationLevelGenericFunctions {
+	public static IUserAuthorization getUserAuthorization(HttpSession session){
+		return 0;
+	}
+}

@@ -1,0 +1,5 @@
+package mamshops.serviceLocators;
+
+public interface ServiceLocatorInterface {
+
+}

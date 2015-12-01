@@ -1,0 +1,304 @@
+package nikoBlex.resources.dynamicimages;
+
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.FilenameFilter;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
+
+import javax.imageio.ImageIO;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.filefilter.IOFileFilter;
+import org.apache.commons.io.filefilter.TrueFileFilter;
+
+import nikoBlex.businessmodels.database.GraphNode;
+import nikoBlex.tools.entries.EnumPropertieKeys;
+import nikoBlex.tools.entries.PropertiesManager;
+import nikoBlex.tools.utils.GenericFunctions;
+import nikoBlex.tools.utils.PathConstructor;
+
+public class DynamicImageManager<NodeLabel extends Enum<NodeLabel>>{
+	private final static String apiKeyId="p2i_key";
+	private final static String apiUrlId="p2i_url";
+	private final static String apiSizeId="p2i_size";
+	private final static String apiScreenSizeId="p2i_screen";
+	private final static String apiFullPageId="p2i_fullpage";
+	private final static String url_image_key="image_url";
+	private final static String estimated_time_key="estimated_need_time";
+	private final static String api_status_key="status";
+	private final static String api_expected_status="finished";
+	
+	private BufferedImage _bufferedImage;
+	private GraphNode _node;
+	private String _nodeRoot;
+	private String _nodeLabel;
+	private File _templateFile;
+	
+	public DynamicImageManager(Long id,IImageType category) throws IOException
+	{		
+		_node=new GraphNode(id);
+		_nodeLabel=_node.getLabel(NodeLabel.class).toString();
+		_nodeRoot=PathConstructor.getPath(_nodeLabel.toString(),category.toString());
+		setTemplateFile(null);
+		if(_templateFile==null)
+			return;
+		_bufferedImage=getBufferedImage(_templateFile);
+	}
+	
+	private static BufferedImage getBufferedImage(File file) throws IOException
+	{
+		BufferedImage image=ImageIO.read(file);
+		BufferedImage result=new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_RGB);
+		Graphics2D graph2D=result.createGraphics();
+		graph2D.drawImage(image, 0, 0, null);
+		graph2D.dispose();
+		return result;
+	}
+	
+	private void setTemplateFile(String extension)
+	{
+		
+		File startingDir=new File(PathConstructor.getPath(
+				PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_ROOT),
+				PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_TEMPLATE),
+				_nodeRoot));
+		if(extension!=null)
+			_templateFile=new File(startingDir,_node.getId()+"."+extension);
+		FilenameFilter filter=new FilenameFilter() {
+			
+			public boolean accept(File dir, String regexFileName) {
+				return regexFileName.matches(_node.getId()+"\\..*");
+			}
+		};
+		
+		File[] listFiles=startingDir.listFiles(filter);
+		if(listFiles!=null && listFiles.length==1)
+			_templateFile=listFiles[0];
+	}
+	
+	public void createImageForNode(InputStream imageStream,String extension) throws IOException
+	{				
+		removeImagesFromId();
+		setTemplateFile(extension);
+		_bufferedImage=ImageIO.read(imageStream);
+		if(!_templateFile.getParentFile().exists())
+			_templateFile.getParentFile().mkdirs();			
+		
+		saveImage(_templateFile, _bufferedImage);
+	}
+	
+	public static String createImageFromSnapshot(String url,String fileName) throws IOException
+	{				
+		String tempPath=PropertiesManager.getString(EnumPropertieKeys.TEMP_DIRECTORY);
+		String result=GenericFunctions.findUniqueFile(tempPath, GenericFunctions.getUrlRoot(url));
+		if(result!=null)
+			return result;
+		HashMap<String,String> apiResultsMap=callApi(url);
+		int neededTime=apiResultsMap.containsKey(estimated_time_key)?Integer.parseInt(apiResultsMap.get(estimated_time_key)):1;
+		while(!apiResultsMap.get(api_status_key).equals(api_expected_status))
+		{
+			try {
+				Thread.sleep(neededTime*1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			apiResultsMap=callApi(url);
+			neededTime=apiResultsMap.containsKey(estimated_time_key)?Integer.parseInt(apiResultsMap.get(estimated_time_key)):1;
+		}
+		String imageUrl=apiResultsMap.get(url_image_key);
+		BufferedImage bufferedImage=ImageIO.read(new URL(imageUrl).openConnection().getInputStream());		
+		File finalFile=new File(tempPath,fileName+"."+GenericFunctions.getFileExtension(imageUrl));
+		saveImage(finalFile, bufferedImage);
+		return finalFile.getAbsolutePath();
+	}
+
+	public static String createImageFromUrl(String url,String fileName) throws IOException
+	{				
+		String tempPath=PropertiesManager.getString(EnumPropertieKeys.TEMP_DIRECTORY);
+		if(fileName==null)
+		{
+			fileName=new URL(url).getPath();
+			if(fileName.contains("/"))
+				fileName=fileName.substring(fileName.lastIndexOf("/"),fileName.length());
+		}
+		String result=GenericFunctions.findUniqueFile(tempPath, fileName);
+		if(result!=null)
+			return result;		
+		BufferedImage bufferedImage=ImageIO.read(new URL(url).openConnection().getInputStream());		
+		File finalFile=new File(tempPath,fileName);
+		saveImage(finalFile, bufferedImage);
+		return finalFile.getAbsolutePath();
+	}
+	
+	private static HashMap<String,String> callApi(String url) throws IOException
+	{
+		InputStream apiStream=new URL(PropertiesManager.getString(EnumPropertieKeys.PAGE2IMAGES_URL)+
+								apiUrlId+"="+url+"&"+
+								apiKeyId+"="+PropertiesManager.getString(EnumPropertieKeys.PAGE2IMAGES_KEY)+"&"+
+								apiFullPageId+"="+PropertiesManager.getString(EnumPropertieKeys.PAGE2IMAGES_FULLPAGE)+"&"+
+								apiSizeId+"="+PropertiesManager.getString(EnumPropertieKeys.PAGE2IMAGES_SIZE)+"&"+
+								apiScreenSizeId+"="+PropertiesManager.getString(EnumPropertieKeys.PAGE2IMAGES_SCREENSIZE))
+								.openConnection().getInputStream();
+		StringWriter writer=new StringWriter();
+		IOUtils.copy(apiStream, writer);
+		return GenericFunctions.getMapFromJSON(writer.toString());
+	}
+	
+	public void removeImagesFromId()
+	{
+		removeImagesInDir(EnumPropertieKeys.DYNAMIC_IMAGES_TEMPLATE);
+		removeImagesInDir(EnumPropertieKeys.DYNAMIC_IMAGES_RESIZED);		
+	}
+	
+	private void removeImagesInDir(EnumPropertieKeys rootPropertyKey)
+	{
+		File mainParentDir=new File(PathConstructor.getPath(
+				PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_ROOT),
+				PropertiesManager.getString(rootPropertyKey),
+				_nodeLabel
+				));		
+		if(!mainParentDir.exists())
+			return;
+		IOFileFilter fileFilter=new IOFileFilter() {
+			
+			
+			public boolean accept(File file, String templateName) {
+				return false;
+			}
+						
+			public boolean accept(File file) {
+				return file.getName().matches(_node.getId()+"\\..*");
+			}
+		};
+		Collection<File> files=FileUtils.listFiles(mainParentDir, fileFilter, TrueFileFilter.INSTANCE);	
+		for (Iterator<File> iterator = files.iterator(); iterator.hasNext();) {
+            iterator.next().delete();
+		}		
+	}
+
+	public String getChangedPicture(boolean resize,boolean cut,Integer x,Integer y,int width,int height) throws IOException
+	{
+		if(_templateFile==null || !_templateFile.exists())
+			return null;	
+		File destinationFile=new File(PathConstructor.getPath(
+				PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_ROOT),
+				PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_RESIZED),
+				_nodeRoot,
+				resize+"_"+cut+"_"+x+"_"+y+"_"+width+"x"+height
+				),_templateFile.getName());
+		createChangedPicture(_bufferedImage, destinationFile, resize, cut, x, y, width, height);
+		return destinationFile.getAbsolutePath().replace(PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_ROOT), "");
+	}
+	
+	public static String getChangedPicture(File initFile,File destinationFile,boolean resize,boolean cut,Integer x,Integer y,int width,int height) throws IOException
+	{
+		if(!initFile.exists())
+			return null;
+		createChangedPicture(getBufferedImage(initFile), destinationFile,resize, cut, x, y, width, height);
+		return destinationFile.getAbsolutePath().replace(PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_ROOT), "");
+	}
+	
+	private static void createChangedPicture(BufferedImage bufferedImage,File destinationFile,boolean resize,boolean cut,Integer x,Integer y,int width,int height) throws IOException
+	{
+		if(destinationFile.exists())
+			return;		
+		
+		BufferedImage result=bufferedImage;		
+		int templateHeight=result.getHeight();
+		int templateWidth=result.getWidth();
+		
+		if(resize)
+		{
+			if(templateHeight>height && templateWidth>width)
+			{
+				double factor=((double)templateHeight)/((double)templateWidth);
+				double widthDiff=((Integer)templateHeight/factor)-width;
+				double heightDiff=((Integer)templateWidth*factor)-height;
+				int resizeHeight=-1;
+				int resizeWidth=-1;
+				if(heightDiff>0 && widthDiff>heightDiff)
+				{
+					resizeHeight=height;
+					resizeWidth=(int) Math.floor(height/factor);
+				}
+				if(widthDiff>0 && heightDiff>widthDiff)
+				{
+					resizeWidth=width;
+					resizeHeight=(int) Math.floor(width*factor);
+				}
+				if(resizeHeight!=-1)
+				{
+					Image image = result.getScaledInstance(resizeWidth, resizeHeight, BufferedImage.SCALE_SMOOTH);
+					result = new BufferedImage(resizeWidth, resizeHeight, BufferedImage.TYPE_INT_RGB);
+					Graphics2D g = result.createGraphics();
+					g.drawImage(image, 0, 0, resizeWidth, resizeHeight, new Color(0,0,0),null);
+					g.dispose();
+				}
+			}
+			
+		}
+		if(cut)
+		{
+			templateHeight=result.getHeight();
+			templateWidth=result.getWidth();
+			int measureX=0;
+			int measureY=0;
+			if(x!=null)
+				measureX=x;
+			if(y!=null)
+				measureY=y;
+			if(height+measureY>templateHeight)
+				height=templateHeight-measureY;
+			if(width+measureX>templateWidth)
+				width=templateWidth-measureX;
+			if(x==null)
+				x=(templateWidth-width)/2;
+			if(y==null)
+				y=(templateHeight-height)/2;
+			result=result.getSubimage(x,y, width, height);
+		}
+		saveImage(destinationFile, result);
+	}
+	
+	public static String getDynamicImagesRoot()
+	{
+		return PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_ROOT);
+	}
+	
+	public static String getTemplateImageDirectory()
+	{
+		return PropertiesManager.getString(EnumPropertieKeys.DYNAMIC_IMAGES_TEMPLATE);
+	}
+	
+	private static void saveImage(File file,BufferedImage bi) throws IOException
+	{
+		if(file.exists())
+			file.delete();
+		else if(!file.getParentFile().exists())
+		file.getParentFile().mkdirs();		
+	    ImageIO.write(bi,GenericFunctions.getFileExtension(file.getAbsolutePath()).toLowerCase(), file);
+	    Set<PosixFilePermission> listPermissions=new HashSet<PosixFilePermission>();
+	    listPermissions.add(PosixFilePermission.OTHERS_WRITE);
+	    listPermissions.add(PosixFilePermission.GROUP_WRITE);
+	    listPermissions.add(PosixFilePermission.OTHERS_WRITE);
+	    try
+	    {
+	    Files.setPosixFilePermissions(file.getParentFile().toPath(), listPermissions);
+	    }
+	    catch(UnsupportedOperationException usoe){}
+	}
+}

@@ -1,0 +1,5 @@
+package nikoBlex.usecases.comment;
+
+public interface IEnumComment {
+
+}

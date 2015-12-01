@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Move package &apos;mamshops.tools.tasks&apos; to &apos;Libs.Mamshops.Requests/src&apos;&#x0D;&#x0A;- Original project: &apos;Libs.Mamshops.Tools&apos;&#x0D;&#x0A;- Destination element: &apos;Libs.Mamshops.Requests/src&apos;&#x0D;&#x0A;- Original element: &apos;Libs.Mamshops.Tools/src/mamshops.tools.tasks&apos;&#x0D;&#x0A;- Update references to refactored element" description="Move package" destination="=Libs.Mamshops.Requests/src" element1="/src&lt;mamshops.tools.tasks" flags="589830" fragments="1" id="org.eclipse.jdt.ui.move" policy="org.eclipse.jdt.ui.movePackages" stamp="1409678640789" version="1.0"/>
+</session>

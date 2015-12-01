@@ -1,0 +1,66 @@
+package mamshops.servlet;
+
+import java.io.IOException;
+
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import mamshops.httpRequests.webcontent.HtmlPageHttpRequest;
+import mamshops.libs.httpRequests.HttpRequestsManager;
+import mamshops.libs.serviceLocators.ServiceLocator;
+import mamshops.libs.servletContexts.ServletContextPropertyKeys;
+
+public class ServletFilter implements Filter{	
+	
+	@Override
+	public void destroy() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void doFilter(ServletRequest request, ServletResponse response,
+			FilterChain filterChain) throws IOException, ServletException 
+	{					
+		HttpServletRequest httpRequest = (HttpServletRequest)request;
+		HttpServletResponse httpResponse=(HttpServletResponse) response;	
+		ServiceLocator sl=(ServiceLocator)request.getServletContext().getAttribute(ServletContextPropertyKeys.SERVICE_LOCATOR);
+		HttpRequestsManager hrm=sl.getService(HttpRequestsManager.class);
+		String  contextPath=httpRequest.getServletContext().getContextPath();		
+		String uri=httpRequest.getRequestURI();
+		if(uri.startsWith(contextPath))
+			uri=uri.substring(contextPath.length());
+		
+		while(uri.startsWith("/"))
+			uri=uri.substring(1);
+		
+		
+		if(uri.isEmpty())		 
+			uri=HtmlPageHttpRequest.getDefault();
+		if(!uri.contains("/"))
+		{
+			httpResponse.sendRedirect(contextPath);
+		 	return;
+		}
+		String[] uriData=uri.split("/");		
+		if(!hrm.hasContent(uriData[0]))
+		{
+			String redirectURL=httpRequest.getRequestURL().toString().replace(httpRequest.getRequestURI(), "");
+			httpResponse.sendRedirect(redirectURL);
+			return;			 
+		}
+		
+		
+		hrm.get(uriData[0]).doGet(httpRequest, httpResponse,uri);	
+	}		
+	@Override
+	public void init(FilterConfig arg0) throws ServletException {
+	}	
+	
+}

@@ -1,0 +1,65 @@
+package mamshops.helpers;
+
+import java.util.Calendar;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.neo4j.graphdb.GraphDatabaseService;
+
+import mamshops.database.DatabaseManager;
+import mamshops.database.User;
+import mamshops.database.User.UserStatus;
+import mamshops.properties.PropertiesManager;
+import mamshops.serviceLocators.ServiceLocator;
+import mamshops.utils.GenericFunctions;
+
+public class UserActionHelper {
+	private static String ATTRIBUTE_USER_ID="attribute.user.id";
+	private static final String REGISTER_DATE="registerDate";
+	private static final String VALIDATION_CODE="validationCode";	
+	private GraphDatabaseService _graphDB;
+	private String _attributeUserId;
+	
+	public UserActionHelper()
+	{
+		DatabaseManager dm=(DatabaseManager)ServiceLocator.getService(DatabaseManager.class);
+		_graphDB=dm.getGraph();
+		_attributeUserId=PropertiesManager.getProperty(ATTRIBUTE_USER_ID);
+	}
+	
+	public String createUser(HttpServletRequest request)
+	{
+		String registerDate=Calendar.getInstance().toString();
+		String validationCode=GenericFunctions.getRandomString(15);
+		Map<String,String[]> parameters=request.getParameterMap();
+		parameters.put(REGISTER_DATE, new String[]{registerDate});
+		parameters.put(VALIDATION_CODE, new String[]{validationCode});
+		User newUser=User.CreateUser(_graphDB, parameters);
+		if(newUser.getStatus()==UserStatus.OK)
+			request.setAttribute(_attributeUserId, newUser);
+		return null;		
+	}
+	
+	public String setParameter(HttpServletRequest request)
+	{
+		User user=(User)request.getAttribute(_attributeUserId);
+		return null;
+	}
+	
+	public String LogUser(HttpServletRequest request)
+	{
+		
+		User loggedUser=User.GetUser(_graphDB, request.getParameterMap());
+		if(loggedUser.getStatus()==UserStatus.OK)
+			request.setAttribute(ATTRIBUTE_USER_ID, loggedUser);		
+		return null;
+	}
+	
+	public String deconnectUser(HttpServletRequest request)
+	{
+		request.setAttribute(ATTRIBUTE_USER_ID, null);
+		User testUser=(User)request.getAttribute(ATTRIBUTE_USER_ID);
+		return null;
+	}
+}

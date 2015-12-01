@@ -1,0 +1,87 @@
+package nikoBlex.requests.getset;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import nikoBlex.requests.getset.AbstractGetSet;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+import nikoBlex.usecases.user.AbstractUserAuthorizationLevel;
+import nikoBlex.businessmodels.UserObject.UserMethodAccess;
+import nikoBlex.businessmodels.database.GraphRelationship;
+import nikoBlex.businessmodels.enums.GenericPropertyKey;
+import nikoBlex.businessmodels.enums.INodeLabel;
+import nikoBlex.businessmodels.enums.INodePropertyKey;
+import nikoBlex.businessmodels.relationships.types.IGraphRelationshipType;
+
+public abstract class AbstractGetter extends AbstractGetSet{	
+	
+	protected AbstractGetter(IUserAuthorizationLevel authorizationLevel,
+			INodeLabel.NodeLabel expectedNodeLabel, INodePropertyKey refKey,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(authorizationLevel, expectedNodeLabel, refKey, sessionAttributeKey);
+	}
+
+	protected String getAttribute(INodePropertyKey key,boolean isMandatory)
+	{
+		if(_currentNode==null)
+			return null;
+		Object result=_currentNode.getProperty(key);
+		if(result!=null)
+			return result.toString();
+		if(isMandatory)
+			return null;
+		return "";
+	}
+	
+	protected List<GraphRelationship> getRelationShips(IGraphRelationshipType relType)
+	{
+		if(_currentNode==null)
+			return null;
+		return _currentNode.getRelationships(relType,true,true);		
+	}
+	
+	protected <T extends AbstractGetter> List<T> getRelatedNodes(Class<T> type,IGraphRelationshipType relType)
+	{
+		if(_currentNode==null)
+			return null;
+		List<GraphRelationship> listRelationships=getRelationShips(relType);
+		List<T> result=new ArrayList<>();
+		for(GraphRelationship relationship:listRelationships)
+			result.add(construct(type, _currentNode.getRelatedNodes(relationship).get(0)));		
+		return result;
+	}
+	
+	protected <T extends AbstractGetter> T getRelatedNode(Class<T> type,IGraphRelationshipType relType)
+	{
+		List<T> allNodes=getRelatedNodes(type, relType);
+		if(allNodes==null || allNodes.isEmpty())
+			return null;
+		return allNodes.get(0);
+	}
+	
+	protected boolean equals(AbstractGetter getter)
+	{
+		return getter.getId()==getId();
+	}
+	
+	public boolean exists()
+	{
+		return _currentNode!=null;
+	}
+	
+	protected Calendar getCalendar()
+	{
+		Calendar result=Calendar.getInstance();
+		result.setTimeInMillis(Long.parseLong(getAttribute(GenericPropertyKey.registerDate, true)));
+		return result;
+	}	
+	
+	
+	public String getDate()
+	{
+		SimpleDateFormat sdf=new SimpleDateFormat("dd/MM/yyyy",_request.getLocale());
+		return sdf.format(getCalendar().getTime());
+	}		
+}

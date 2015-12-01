@@ -1,0 +1,51 @@
+1396911436706	Rename type 'NavigationActionHelper'
+1396960072467	Rename type 'indexes'
+1396962812325	Delete element
+1396965390654	Rename type 'User'
+1396991879899	Rename type 'IRequestHelper'
+1396991884337	Move compilation unit
+1396991935053	Delete element
+1397057072461	Move package
+1397078749922	Move compilation units
+1397078753780	Delete element
+1397079350852	Delete element
+1397079500877	Move package
+1397079559730	Copy package
+1397079612310	Delete element
+1397079673099	Copy package
+1397079717093	Copy package
+1397079776016	Delete element
+1397079778282	Delete element
+1397079804391	Delete element
+1397079874919	Rename package 'mamshops.businessmodels.containers'
+1397079881685	Move compilation unit
+1397079905578	Delete element
+1397083236516	Rename package 'mamshops.libs.NodeVelocities'
+1397083249896	Rename type 'ContainerVelocity'
+1397083256046	Rename type 'FilterVelocity'
+1397083261786	Rename type 'FriendVelocity'
+1397083269209	Rename type 'ShopVelocity'
+1397083274604	Rename type 'UserVelocity'
+1397083385375	Rename type 'IRequestVelocity'
+1397123873142	Move compilation unit
+1397123961775	Rename type 'ShopActionHelper'
+1397124418557	Rename type 'ActionHttpRequest'
+1397124435014	Rename type 'AbstractHttpRequest'
+1397151708315	Rename package 'mamshops.libs.helpers'
+1397151721466	Rename package 'mamshops.helpers.webcontent'
+1397153106621	Move package
+1397153218266	Move compilation unit
+1397153356249	Move package
+1397162770554	Move compilation unit
+1397163764429	Rename package 'mamshops.webcontent.helpers'
+1397165415911	Move compilation unit
+1397165435294	Move package
+1397169691574	Copy compilation unit
+1397169705730	Copy compilation unit
+1397169715289	Delete element
+1397169736287	Copy compilation unit
+1397169971019	Move compilation unit
+1397200881205	Delete element
+1397201235831	Copy compilation unit
+1397202048192	Delete element
+1397205622098	Rename type 'FriendshipParameter'

@@ -1,0 +1,65 @@
+package mamshops.businessmodels.containers;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.libs.businessmodels.Node;
+import mamshops.libs.businessmodels.NodeLabel;
+import mamshops.libs.businessmodels.propertykeys.ContainerPropertyKey;
+import mamshops.libs.relationships.RelationshipType;
+import mamshops.libs.velocity.IRequestVelocity;
+import mamshops.libs.velocity.IStaticVelocity;
+
+public class ContainerVelocity implements IRequestVelocity,IStaticVelocity{	
+	Node _selectedNode;
+	public ContainerVelocity()
+	{
+		
+	}
+	
+	public ContainerVelocity(Long nodeId)
+	{
+		_selectedNode=new Node(nodeId);
+	}
+	public void getContainer()
+	{
+		_request.getSession().setAttribute(NodeLabel.container.toString(), _selectedNode);
+	}
+	
+	public String getContainerName()
+	{
+		return _selectedNode.getProperty(ContainerPropertyKey.name).toString();
+	}
+	
+	public Long getContainerParent()
+	{
+		return _selectedNode.getRelationships(RelationshipType.container_hierarchy, true, false).get(0);
+	}
+	
+	public Iterable<Long> getContainerChildren()
+	{
+		List<Long> result=new ArrayList<>();
+		for(long rs:_selectedNode.getRelationships(RelationshipType.container_hierarchy, true, false))
+			result.add(rs);
+		return result;
+	}	
+	
+	public static Iterable<Long> getRootContainers()
+	{
+		return Node.getNodes(NodeLabel.container, ContainerPropertyKey.isRoot, true);
+	}
+	
+	public boolean isMenu()
+	{
+		return (boolean)_selectedNode.getProperty(ContainerPropertyKey.isMenu);
+	}
+	
+	@Override
+	public void setRequest(HttpServletRequest request) {
+		_request=request;
+		_selectedNode=(Node)request.getSession().getAttribute(NodeLabel.container.toString());
+	}
+	
+}

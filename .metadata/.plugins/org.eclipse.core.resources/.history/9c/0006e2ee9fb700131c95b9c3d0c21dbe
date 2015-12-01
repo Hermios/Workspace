@@ -1,0 +1,48 @@
+package mamshops.admin.servlets;
+
+import java.io.IOException;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
+import mamshops.data.managers.ClassesManager;
+import mamshops.serviceLocators.IServiceLocator;
+
+
+public class ServletFilter implements Filter{
+
+	@Override
+	public void destroy() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void doFilter(ServletRequest arg0, ServletResponse arg1,
+			FilterChain arg2) throws IOException, ServletException {
+		System.out.println("toto");
+//		try
+//		{
+//		Context initCtx = new InitialContext();
+//		Context envCtx = (Context) initCtx.lookup("java:comp/env");
+//		ClassesManager cm=(ClassesManager)envCtx.lookup("mamshops/ClassesManagerFactory");
+//		System.out.println(cm.getClasses(IServiceLocator.class).size());
+//		}
+//		catch(Exception e)
+//		{
+//			e.printStackTrace();
+//		}
+	}
+
+	@Override
+	public void init(FilterConfig arg0) throws ServletException {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

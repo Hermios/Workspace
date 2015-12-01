@@ -1,0 +1,12 @@
+package mamshops.httpRequests.webcontent;
+
+import mamshops.httpRequests.AbstractHttpRequest;
+
+public class ImageHttpRequest extends AbstractHttpRequest{
+	private final static String IMAGE_DIRECTORY="httpRequest.image.root";		
+	
+	public ImageHttpRequest() {
+		super(IMAGE_DIRECTORY);		
+	}
+
+}

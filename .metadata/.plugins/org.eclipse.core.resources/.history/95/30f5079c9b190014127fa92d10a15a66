@@ -1,0 +1,28 @@
+package mamshops.user.getters;
+
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public class FollowerGetter extends AbstractGetter{
+
+	protected FollowerGetter() {
+		super(UserMethodAccess.user, null, null, SessionAttributeKeys.currentFollower);
+	}
+	
+	@HelperAnnotation(description="return the name of the friend")
+	public String getName()
+	{		
+		return getAttribute(UserPropertyKey.name, false);
+	}
+		
+	@HelperAnnotation(description="return true is the user is a male, false if she is a female, and null if it was not specified")
+	public String getSex()
+	{
+		return getAttribute(UserPropertyKey.sex,false);
+	}
+	
+
+}

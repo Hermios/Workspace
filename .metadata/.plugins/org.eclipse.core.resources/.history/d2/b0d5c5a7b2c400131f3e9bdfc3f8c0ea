@@ -1,0 +1,64 @@
+package mamshops.requests.velocity;
+
+import java.io.File;
+import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.libs.entries.ClassesManager;
+import mamshops.libs.entries.PropertiesManager;
+import mamshops.libs.serviceLocators.IServiceLocator;
+import mamshops.requests.httpRequest.RequestParameterKeys;
+
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.runtime.RuntimeConstants;
+
+public class VelocityManager implements IServiceLocator{		
+	private static String RESOURCEBUNDLE_KEYWORD="velocity.resourcebundle.keyword";
+	private HashMap<String,IStaticRequest> _mapStaticVelocity=new HashMap<>();
+	private HashMap<String,IRequestGetter> _mapDynamicVelocity=new HashMap<>();
+			
+	public void generateHtml(HttpServletRequest request, PrintWriter writer) throws Exception
+	{						
+		String target=request.getRequestURI().replace(request.getContextPath(), "");
+		target=target.replace("/", File.separator);
+		VelocityContext vc=new VelocityContext(_mapStaticVelocity);
+		for(Map.Entry<String, IRequestGetter> entry:_mapDynamicVelocity.entrySet())
+		{
+			entry.getValue().setRequest(request);
+			vc.put(entry.getKey(), entry.getValue());
+		}
+		ResourcesBundlesPage rbp;
+		try {
+			rbp = new ResourcesBundlesPage(Locale.FRENCH, target.replace(File.separator, "."));
+			vc.put(PropertiesManager.getProperty(RESOURCEBUNDLE_KEYWORD), rbp);
+		} catch (MalformedURLException e) {			
+			e.printStackTrace();			
+		}			
+		Template template=Velocity.getTemplate(target);
+		template.merge(vc, writer);
+		writer.println();
+	}
+
+	@Override
+	public void endServiceLocator() {		
+	}
+
+	@Override
+	public void initServiceLocator(ClassesManager cm,ServletContext context) throws Exception {
+		Velocity.setProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH, PropertiesManager.getProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH));
+		Velocity.setProperty(RuntimeConstants.RUNTIME_LOG,PropertiesManager.getProperty(RuntimeConstants.RUNTIME_LOG));
+		Velocity.init();		
+		for(Class<IStaticRequest> currentClass:cm.getClasses(IStaticRequest.class))
+			_mapStaticVelocity.put(currentClass.getSimpleName(), currentClass.newInstance());
+		for(Class<IRequestGetter> currentClass:cm.getClasses(IRequestGetter.class))
+			_mapDynamicVelocity.put("_"+currentClass.getSimpleName(), currentClass.newInstance());
+	}
+}

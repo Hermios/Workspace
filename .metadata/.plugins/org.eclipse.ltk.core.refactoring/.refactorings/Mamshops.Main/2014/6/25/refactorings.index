@@ -1,0 +1,24 @@
+1403009708982	Move compilation unit
+1403022736770	Copy compilation unit
+1403022742776	Rename type 'ResourceBundlesGetter'
+1403170256433	Rename type 'TimestampSetter'
+1403182217294	Rename type 'PropertiesReloader'
+1403254385229	Rename type 'Selector'
+1403254493638	Move compilation unit
+1403347032529	Move compilation unit
+1403373450383	Rename package 'mamshops.requests.getset'
+1403373505707	Move package
+1403373511633	Move package
+1403375003651	Move compilation unit
+1403375085346	Move compilation unit
+1403377793856	Rename package 'mamshops.requests.getter'
+1403378041571	Delete element
+1403378058993	Delete element
+1403378173693	Delete element
+1403378191532	Rename package 'mamshops.generics.getter'
+1403432481000	Move compilation unit
+1403432489860	Move compilation unit
+1403432492005	Delete element
+1403432493790	Delete element
+1403432591219	Rename type 'FriendshipSetter'
+1403432609647	Delete element

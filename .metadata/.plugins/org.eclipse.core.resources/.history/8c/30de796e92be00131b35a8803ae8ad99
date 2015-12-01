@@ -1,0 +1,56 @@
+package mamshops.servlet;
+
+
+import javax.management.AttributeNotFoundException;
+import javax.management.InstanceNotFoundException;
+import javax.management.MBeanException;
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.MalformedObjectNameException;
+import javax.management.ObjectName;
+import javax.management.ReflectionException;
+import javax.servlet.ServletContextEvent;
+
+import org.apache.catalina.Server;
+import org.apache.catalina.Service;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.core.StandardEngine;
+import org.apache.tomcat.util.http.mapper.Mapper;
+
+import mamshops.libs.servletContexts.AbstractApplicationServletContextListener;
+import mamshops.libs.servletContexts.ServletContextPropertyKeys;
+import mamshops.libs.utils.ContextTools;
+
+public class ApplicationServletContextListener extends AbstractApplicationServletContextListener{
+	@Override
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		super.contextInitialized(servletContextEvent);
+		try {
+			MBeanServer mBeanServer = MBeanServerFactory.findMBeanServer(null).get(0);
+		    ObjectName name = new ObjectName("Catalina", "type", "Server");
+		    Server server = (Server) mBeanServer.getAttribute(name, "managedResource");
+		    StandardEngine engine =null;
+		    for(Service service:server.findServices())
+		    {
+		    	if(service.getName().equals("Catalina"))
+		    		engine=(StandardEngine)service.getContainer();
+	    	}
+		    if(engine==null)
+		    	throw new InstanceNotFoundException();
+		    StandardContext context= (StandardContext) engine.findChild(engine.getDefaultHost()).findChild(contextName);
+		    String aliasesString="/"+path+"="+localDir;
+		    context.setAliases(aliasesString);
+		    Mapper mapper = context.getMapper();
+		    //just a clean up step(remove the host)
+		    mapper.removeHost(engine.getDefaultHost());
+		    //add the host back with all required aliases 
+		    mapper.addHost(engine.getDefaultHost(), new String[]{aliasesString}, engine.getDefaultHost());
+
+			System.out.println(ContextTools.addAliases("/Test", "WebContent", "D:\\Mamshops\\frontend"));
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		servletContextEvent.getServletContext().setAttribute(ServletContextPropertyKeys.CLASSES_MANAGER, _cm.getAllClasses());				
+	}
+}

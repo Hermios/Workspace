@@ -1,0 +1,14 @@
+package mamshops.admin.servlets;
+
+import javax.servlet.ServletContextEvent;
+
+import mamshops.libs.servletContexts.AbstractApplicationServletContextListener;
+
+public class ApplicationServletContextListener extends AbstractApplicationServletContextListener{
+	
+	@Override
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		super.contextInitialized(servletContextEvent);
+		
+	}
+}

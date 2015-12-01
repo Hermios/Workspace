@@ -1,0 +1,42 @@
+package mamshops.user.setters;
+
+import java.io.File;
+import java.io.IOException;
+import java.security.NoSuchAlgorithmException;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.ObjectPropertyKey;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractSetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.resources.dynamicimages.DynamicImageHelper;
+import mamshops.resources.dynamicimages.ObjectImageType;
+import mamshops.resources.tools.ResourceTools;
+
+public class ObjectSetter extends AbstractSetter{
+
+	public ObjectSetter() {
+		super(UserMethodAccess.user, SessionAttributeKeys.currentObject);
+	}
+	
+	public void create()
+	{
+		try 
+		{
+			String filePath=DynamicImageHelper.uploadImageFromUrl(_parameter);
+			String hashCode=ResourceTools.getFileHash(filePath);
+			_currentNode=MamsNode.create(NodeLabel.object,ObjectPropertyKey.hashcode,hashCode,false);
+			if(_currentNode!=null)
+				DynamicImageHelper.uploadImageFromTemp(new File(filePath).getName(), getId(), ObjectImageType.picture);
+			else
+				_currentNode=MamsNode.get(NodeLabel.object,ObjectPropertyKey.hashcode,hashCode,false);
+			
+		} 
+		catch (IOException | NoSuchAlgorithmException e) 
+		{
+			e.printStackTrace();
+		}		
+	}
+
+}

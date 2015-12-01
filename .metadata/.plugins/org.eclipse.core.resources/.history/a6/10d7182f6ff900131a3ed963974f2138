@@ -1,0 +1,68 @@
+package mamshops.businessmodels.tools;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.select.Elements;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.propertykeys.node.LocalizationPropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.tools.entries.PropertiesManager;
+
+public class NodesTools {
+	private final static String IS_EVERYONE_ADMIN="admin.debug.everyoneisadmin";
+	private final static String LIST_ADMIN="list.admin.mail";
+	private final static String IS_MAILVALIDATION_MANDATORY="admin.debug.mailvalidationmandatory";
+	private final static String WEBSITE_COUNTRIES="http://countrycode.org/";
+	private final static String COUNTRY_CHECK_NOTEMPTY="country.bootstrap.checkIfNotEmpty";
+	
+	public static void listAllCountries() throws IOException
+	{
+		List<MamsNode> listCountrieNodes=MamsNode.getNodes(NodeLabel.country);
+		if(!listCountrieNodes.isEmpty() && !PropertiesManager.getProperty(COUNTRY_CHECK_NOTEMPTY).equals("true"))
+			return;
+		System.out.println("load all countries");
+		Document document=Jsoup.connect(WEBSITE_COUNTRIES).get();
+		Element tableBody=document.getElementsByAttributeValue("id", "main_table_blue").get(0).getElementsByTag("tbody").get(0);
+		List<String> listCountrieCodes=new ArrayList<>();
+		for(MamsNode countryNode:listCountrieNodes)
+			listCountrieCodes.add(countryNode.getProperty(LocalizationPropertyKey.code).toString());
+		for(Element element:tableBody.getElementsByTag("tr"))
+		{
+			Elements cellsElements=element.getElementsByTag("td");
+			String countryName=cellsElements.get(0).text().trim();			
+			String countryCode=cellsElements.get(1).text().split("/")[0].trim();
+			if(countryCode.isEmpty())
+				countryCode=countryName.replace(" ", "_");
+			if(!listCountrieCodes.contains(countryCode))
+				MamsNode.create(NodeLabel.country, LocalizationPropertyKey.code, countryCode,true);
+		}
+	}
+
+	
+	public static UserMethodAccess getUserStatus(Long userId)
+	{
+		if(IS_EVERYONE_ADMIN.equals("true"))
+			return UserMethodAccess.admin;	
+		if(userId==null)
+			return UserMethodAccess.none;
+		MamsNode currentUser=new MamsNode((Long)userId);
+		if(currentUser.getProperty(UserPropertyKey.codeValidation)!=null && PropertiesManager.getProperty(IS_MAILVALIDATION_MANDATORY).equals("true"))
+			return UserMethodAccess.basicuser;
+		String email=currentUser.getProperty(UserPropertyKey.email).toString();	
+		if(email.equals(PropertiesManager.getProperty("default.admin.email")))
+			return UserMethodAccess.admin;
+		String listAdmins=PropertiesManager.getProperty(LIST_ADMIN);
+		if (listAdmins.contains(email+";"))
+			return UserMethodAccess.admin;
+		else
+			return UserMethodAccess.user;
+		
+	}
+}

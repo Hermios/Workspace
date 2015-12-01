@@ -1,0 +1,67 @@
+package mamshops.admin.tools;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.List;
+
+//import mamshops.helpers.HelperAnnotation;
+//import mamshops.velocity.VelocityAnnotation;
+
+public class MethodDescription {
+	private String _name;
+	private String _parameters;
+	private String _description;
+	private String _returnType;
+	public MethodDescription(Method method)
+	{		
+		_name=method.getDeclaringClass().getSimpleName()+"."+method.getName();
+		
+//		HelperAnnotation helperAnnotation=method.getAnnotation(HelperAnnotation.class);
+//		if(helperAnnotation!=null)
+//		{
+//			_description=helperAnnotation.description();		
+//			_parameters=String.join(",",helperAnnotation.inputParameter());
+//		}		
+//			
+//		_returnType=method.getReturnType().getSimpleName();
+	}
+	
+	public MethodDescription(Method method,Class<?> currentClass)
+	{		
+//		_name=currentClass.getSimpleName()+"."+method.getName();
+//		
+//		VelocityAnnotation velocityAnnotation=method.getAnnotation(VelocityAnnotation.class);		
+//		if(velocityAnnotation!=null)
+//		{
+//			_description=velocityAnnotation.description();
+//			List<String> parametersAsStrings=new ArrayList<>();
+//			for(Parameter parameter:method.getParameters())
+//				parametersAsStrings.add(parameter.getType().getSimpleName()+" "+parameter.getName());
+//			_parameters=String.join(",",parametersAsStrings);
+//		}
+//			
+//		_returnType=method.getReturnType().getSimpleName();
+	}
+
+	
+	public String getName()
+	{
+		return _name;
+	}
+	
+	public String getDescription()
+	{
+		return _description;
+	}
+	
+	public String getReturnType()
+	{
+		return _returnType;
+	}
+	
+	public String getParameters()
+	{
+		return _parameters;
+	}
+}

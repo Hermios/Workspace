@@ -1,0 +1,36 @@
+package mamshops.main.getters;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.requests.session.SessionAttributeKeys;
+import mamshops.requests.tools.RequestGenericFunctions;
+import mamshops.requests.velocity.IRequestGetter;
+import mamshops.requests.velocity.UserExpectedStatus;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public class NotConnectedGetter implements IRequestGetter{
+	HttpServletRequest _request;
+	
+	@HelperAnnotation(description="return true if a user is connected")
+	public boolean isConnected()
+	{
+		return _request.getSession().getAttribute(SessionAttributeKeys.currentUser)!=null;
+	}
+
+	@HelperAnnotation(description="return true if a user is connected and is admin")
+	public boolean isAdmin()
+	{
+		return RequestGenericFunctions.requestUserStatus(_request)==UserExpectedStatus.admin;
+	}
+	
+	@Override
+	public void setRequest(HttpServletRequest request) throws Exception {	
+		_request=request;
+	}
+	
+	
+	@Override
+	public UserExpectedStatus getExpectedStatus() {
+		return UserExpectedStatus.none;
+	}
+}

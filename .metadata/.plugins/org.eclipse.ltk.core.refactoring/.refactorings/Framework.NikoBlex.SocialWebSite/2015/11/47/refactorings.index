@@ -1,0 +1,27 @@
+1447962129672	Rename compilation unit 'AbstractUserAuthorizationLevel.java'
+1447962520024	Rename type 'RequestUri'
+1448027003915	Delete element
+1448027008581	Delete element
+1448028886731	Infer generic type arguments
+1448029004397	Rename type 'INodeLabel'
+1448029400392	Delete element
+1448029528601	Rename local variable 'mamsNode'
+1448029631678	Rename local variable 'mamsNode'
+1448029841908	Rename method 'getListMamsRelationship'
+1448030679235	Delete element
+1448030748847	Rename local variable 'nl'
+1448031167813	Delete elements
+1448031321970	Rename type variable 'NL'
+1448031437044	Rename field '_nl'
+1448031661011	Rename type variable 'NodeLabelEnum'
+1448032069444	Rename local variable 'expectedNodeLabel'
+1448032504511	Rename type variable 'NodeLabelEnum'
+1448033976584	Infer generic type arguments
+1448040224349	Rename type 'AbstractGetSet'
+1448040234439	Rename type 'AbstractGetter'
+1448040245957	Rename type 'AbstractSetter'
+1448040303126	Copy compilation unit
+1448040321333	Copy compilation unit
+1448047268863	Copy compilation unit
+1448048118133	Delete element
+1448048134808	Delete element

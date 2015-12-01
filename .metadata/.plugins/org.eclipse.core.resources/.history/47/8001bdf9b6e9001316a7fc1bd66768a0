@@ -1,0 +1,332 @@
+package mamshops.businessmodels.database;
+
+import java.io.File;
+import java.io.IOException;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Properties;
+
+import mamshops.businessmodels.node.INodePropertyKey;
+import mamshops.businessmodels.node.NodeLabel;
+import mamshops.businessmodels.relationships.IRelationshipPropertyKey;
+import mamshops.businessmodels.relationships.IMamsRelationshipType;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+
+import org.neo4j.jdbc.Driver;
+import org.neo4j.jdbc.Neo4jConnection;
+
+public class GraphDatabase{
+	private final static String GRAPH_PATH="neo4j.graphdb.path";
+	private final static String GRAPH_ARCHIVE_DIR="archive.graph.directory";
+	private final static String GRAPH_ARCHIVE_PREFIX="archive.graph.prefix";
+	private final static String EXCEPTION_STOP_SERVER="server.exception.interrupt";
+	private final static String GRAPH_ARCHIV_ACTIV="graph.archivation.activ";
+	private final static String GRAPH_SERVER_HOST="graph.server.host";
+	private final static String GRAPH_SERVER_PORT="graph.server.port";
+	private final static String GRAPH_ADMIN_NAME="graph.admin.name";
+	private final static String GRAPH_ADMIN_PASSWORD="graph.admin.password";
+	private final static String START_URL_CONNECTION="jdbc:neo4j://";
+	
+	private static GraphDatabase _instance;
+	private Neo4jConnection _neo4jConnection;
+	
+	private GraphDatabase()
+	{				
+		if(_neo4jConnection!=null)
+			return;
+		File currentGraph=new File(PropertiesManager.getProperty(GRAPH_PATH));
+		DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+		Calendar cal = Calendar.getInstance();		
+		String copyGraphName=PropertiesManager.getProperty(GRAPH_ARCHIVE_PREFIX)+dateFormat.format(cal.getTime());
+		
+		//Archive current graph
+		if(PropertiesManager.getProperty(GRAPH_ARCHIV_ACTIV).equals("true") && currentGraph.exists())
+		{
+			System.out.println("Archive current graph");
+			try {
+				GenericFunctions.copyFolder(currentGraph, new File(PropertiesManager.getProperty(GRAPH_ARCHIVE_DIR),copyGraphName));
+			} catch (IOException e) {
+				e.printStackTrace();
+				if(PropertiesManager.getProperty(EXCEPTION_STOP_SERVER).equals("true"))
+				{
+					java.lang.System.exit(1); 
+					return;
+				}	
+			}
+		}	
+		
+		Properties connectionProperties=new Properties();
+		connectionProperties.put("user", PropertiesManager.getProperty(GRAPH_ADMIN_NAME));
+		connectionProperties.put("password", PropertiesManager.getProperty(GRAPH_ADMIN_PASSWORD));
+		try {
+			Class.forName("org.neo4j.jdbc.Driver");
+			_neo4jConnection=new Driver().connect(START_URL_CONNECTION+
+					PropertiesManager.getProperty(GRAPH_SERVER_HOST)+
+					":"+PropertiesManager.getProperty(GRAPH_SERVER_PORT)
+					, connectionProperties);
+		} catch (Exception e) {
+			e.printStackTrace();
+			if(PropertiesManager.getProperty(EXCEPTION_STOP_SERVER).equals("true"))
+			{
+				java.lang.System.exit(1); 
+				return;
+			}
+		}
+	}
+		
+	private static GraphDatabase getInstance()
+	{
+		if(_instance==null)
+			_instance=new GraphDatabase();
+		return _instance;
+	}	
+		
+	private ResultSet sendCommand(String command) throws SQLException
+	{
+		try(Statement statement = _neo4jConnection.createStatement())
+		{
+			return statement.executeQuery(command);
+		}
+	}
+	
+	public static void connect()
+	{
+		getInstance();
+	}
+	
+	public static void disconnect()
+	{
+		if(_instance==null)
+			return;
+		try 
+		{
+			if(getInstance()._neo4jConnection!=null)
+			{
+				getInstance()._neo4jConnection.close();
+				getInstance()._neo4jConnection=null;
+			}
+			_instance=null;
+		} 
+		catch (SQLException e) 
+		{
+			e.printStackTrace();
+		}
+	}
+		
+	public static Long createNode(NodeLabel labelName)
+	{
+		try
+		{
+			ResultSet rs = getInstance().sendCommand("CREATE (n:"+labelName+") RETURN id(n)");
+			Long result= rs.next()?rs.getLong("id(n)"):null;
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}		
+	}
+	
+	public static Object getNodeProperty(long nodeId,INodePropertyKey key)
+	{
+		try
+		{
+			ResultSet rs = getInstance().sendCommand("START n=node("+nodeId+") RETURN n."+key);
+			Object result= rs.next()?rs.getObject("n."+key):null;
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+	public static void removeNodeProperty(long nodeId,INodePropertyKey key)
+	{
+		try
+		{
+			getInstance().sendCommand("START n=node("+nodeId+") remove n."+key+" RETURN n");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}	
+	}
+	
+	public static void setNodeProperty(long nodeId,INodePropertyKey key,Object value)	
+	{
+		try
+		{
+			getInstance().sendCommand("START n=node("+nodeId+") set n."+key+" = \""+ value+"\" RETURN n");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}	
+	}
+	
+	public static List<Long> findNodesByLabelAndProperty(NodeLabel labelName,INodePropertyKey key,Object value)
+	{
+		try
+		{
+			List<Long> result=new ArrayList<>();
+			ResultSet rs = getInstance().sendCommand("MATCH (n:"+labelName+") WHERE n."+key+" = \""+value+"\" RETURN id(n)");
+			while(rs.next())
+				result.add(rs.getLong("id(n)"));
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+
+	public static String getNodeLabel(long nodeId)
+	{
+		try
+		{
+			ResultSet rs = getInstance().sendCommand("START n=node("+nodeId+") RETURN labels(n)");
+			String result= rs.next()?rs.getString("labels(n)"):null;
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+
+	public static Long getOtherNode(long nodeId,long relationShipId)
+	{
+		try
+		{
+			ResultSet rs = getInstance().sendCommand("START n=node("+nodeId+") MATCH (n)-[r]-(b) WHERE id(r)="+relationShipId+" RETURN id(b)");
+			Long result= rs.next()?rs.getLong("id()"):null;
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+		
+	public static Long createRelationshipTo(long nodeId,long targetId,IMamsRelationshipType relationShipType)
+	{
+		try
+		{
+			ResultSet rs = getInstance().sendCommand("START a=node("+nodeId+") MATCH (a),(b) WHERE id(b)="+targetId+"CREATE (a)-[r:"+relationShipType+"]->(b) RETURN id(r)");
+			Long result=rs.next()?rs.getLong("id(r)"):null;
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}	
+	
+	public static List<Long> getRelationshipsFromNode(long nodeId,IMamsRelationshipType relationShipType)
+	{
+		try
+		{
+			List<Long> result=new ArrayList<>();
+			ResultSet rs = getInstance().sendCommand("START n=node("+nodeId+") MATCH(n)-->("+relationShipType+") RETURN id(r)");
+			while(rs.next())
+				result.add(rs.getLong("id(r)"));
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+	public static void setRelationshipProperty(long rsId,IRelationshipPropertyKey key,Object value)	
+	{
+		try
+		{
+			getInstance().sendCommand("START n=relationship("+rsId+") set n."+key+" = \""+value+"\" RETURN n");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}	
+	}
+	
+	public static Object getRelationshipProperty(long rsId,IRelationshipPropertyKey key)
+	{
+		try
+		{
+			ResultSet rs = getInstance().sendCommand("START r=relationship("+rsId+") RETURN r."+key);
+			Object result= rs.next()?rs.getObject("r."+key):null;
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+	public static Long getRelationshipNode(long rsId,boolean startRelationship)
+	{
+		try
+		{
+			ResultSet rs = getInstance().sendCommand("START r=relationship("+rsId+") MATCH (a)-[r]-(b) RETURN id(a),id(b)");
+			Long result= rs.next()?rs.getLong("id("+(startRelationship?"a":"b")+")"):null;
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+	public static String getRelationshipType(long rsId)
+	{
+		try
+		{
+			ResultSet rs = getInstance().sendCommand("START r=relationship("+rsId+") RETURN type(r)");
+			String result= rs.next()?rs.getString("type(r)"):null;
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+		
+	public static List<Long> getNodes(NodeLabel nodeLabel)
+	{	
+		try
+		{
+			List<Long> result=new ArrayList<>();
+			ResultSet rs = getInstance().sendCommand("MATCH (n:"+nodeLabel+") RETURN id(n)");
+			while(rs.next())
+				result.add(rs.getLong("id(n)"));
+			rs.close();
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}	
+	}
+	
+	public static void removeNode(long nodeId)
+	{
+		try
+		{
+			getInstance().sendCommand("START n=node("+nodeId+") DELETE n RETURN NULL");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}			
+	}
+	
+	public static void removeRelationShip(long relationShipId)
+	{
+		try
+		{
+			getInstance().sendCommand("START r=relationship("+relationShipId+") remove r RETURN r");
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}	
+	}
+}

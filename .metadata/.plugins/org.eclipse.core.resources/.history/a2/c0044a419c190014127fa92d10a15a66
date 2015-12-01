@@ -1,0 +1,46 @@
+package mamshops.user.getters;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.relationships.types.UserRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.main.getters.ShopGetter;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.utils.GenericFunctions;
+
+public class FollowerGetter extends AbstractGetter{
+
+	protected FollowerGetter() {
+		super(UserMethodAccess.user, null, null, SessionAttributeKeys.currentFollower);
+	}
+	
+	@HelperAnnotation(description="return the name of the friend")
+	public String getName()
+	{		
+		return getAttribute(UserPropertyKey.name, false);
+	}
+		
+	@HelperAnnotation(description="return the first name of the user")
+	public String getFirstName()
+	{
+		return getAttribute(UserPropertyKey.firstname,true);
+	}
+	
+	@HelperAnnotation(description="return a list of shops for the current user")
+	public List<ShopGetter> getUserShops(boolean validated,Integer count,boolean random)
+	{
+		List<UserShopGetter> listUserShops=getRelatedNodes(UserShopGetter.class,UserRelationshipType.usershop);
+		listUserShops= GenericFunctions.getEditedList(listUserShops, count, random);
+		List<UserShopGetter> result=new ArrayList<>();
+		for(UserShopGetter userShopGetter:listUserShops)
+		{
+			if(userShopGetter.isValidated()==validated)
+				result.add(userShopGetter.getShop());
+		}
+		return result;
+	}
+}

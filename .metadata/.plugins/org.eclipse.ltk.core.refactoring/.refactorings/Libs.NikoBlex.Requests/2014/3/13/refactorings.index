@@ -1,0 +1,65 @@
+1395744234149	Copy compilation unit
+1395744240176	Delete element
+1395765955201	Rename type 'DataLoader'
+1395767549710	Move compilation unit
+1395767556920	Move compilation unit
+1395767612116	Move compilation unit
+1395767621909	Rename type 'ResourcesBuilderLoader'
+1395767630657	Rename package 'mamshops.dataLoaders'
+1395769531717	Delete element
+1395772347946	Rename type 'PropertiesManager'
+1395773919140	Move compilation unit
+1395773927920	Rename package 'mamshops.dataManagers'
+1395776808223	Delete element
+1395776867698	Delete element
+1395791964012	Rename method 'ReloadProperties'
+1395791970696	Rename method 'GetProperties'
+1396027143553	Rename package 'mamshops.annotations'
+1396027163134	Rename package 'mamshops.data.managers'
+1396027168752	Rename package 'mamshops.database'
+1396027175501	Rename package 'mamshops.interfaces'
+1396027222440	Delete element
+1396027228311	Rename package 'mamshops.serviceLocators'
+1396027233270	Rename package 'mamshops.utils'
+1396028073564	Rename package 'mamshops.velocity'
+1396028079813	Rename package 'mamshops.helpers'
+1396029159380	Rename local variable 'sourceRelationship'
+1396098414708	Rename method 'getRelationships'
+1396105030731	Rename local variable 'email'
+1396105828386	Copy package
+1396105978174	Move compilation unit
+1396106093915	Rename type 'ShopConstants'
+1396106106032	Rename type 'UserConstants'
+1396107161592	Rename type 'RelationshipConstants'
+1396112183923	Rename package 'mamshops.businessmodels.containers'
+1396112194945	Rename package 'mamshops.relationships'
+1396112226787	Delete element
+1396113622819	Delete element
+1396118197761	Delete element
+1396118203804	Delete element
+1396118214233	Delete element
+1396119522089	Rename package 'mamshops.businessmodels.filters'
+1396119547788	Rename type 'ContainerParameters'
+1396119558846	Rename type 'FilterConstants'
+1396119572237	Rename type 'ShopParameter'
+1396119588807	Rename type 'UserParameter'
+1396119608695	Rename type 'IRelationshipParameter'
+1396119615654	Rename type 'INodeParameter'
+1396119665079	Delete element
+1396119689442	Move compilation unit
+1396119707463	Rename package 'mamshops.libs.businessmodels.containers'
+1396119715189	Move compilation unit
+1396119718564	Delete element
+1396119726141	Move compilation unit
+1396119730198	Delete element
+1396119734477	Move compilation unit
+1396119737506	Delete element
+1396121778756	Move compilation unit
+1396180134781	Delete element
+1396180866867	Delete element
+1396182016300	Rename type 'ISharedClasses'
+1396182921369	Delete element
+1396183792778	Move compilation unit
+1396183816820	Rename package 'mamshops.libs.interfaces'
+1396183824423	Move compilation unit
+1396183857088	Move compilation unit

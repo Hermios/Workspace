@@ -1,0 +1,72 @@
+package nikoBlex.requests.get;
+
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NoSuchElementException;
+
+import javax.servlet.ServletContext;
+import javax.servlet.http.HttpServletRequest;
+
+import nikoBlex.tools.entries.ClassesManager;
+import nikoBlex.tools.entries.EnumPropertieKeys;
+import nikoBlex.tools.entries.PropertiesManager;
+import nikoBlex.tools.serviceLocators.IServiceLocator;
+import nikoBlex.tools.serviceLocators.ServiceLocator;
+import nikoBlex.requests.getset.AbstractGetter;
+import nikoBlex.requests.keys.ServletContextPropertyKeys;
+import nikoBlex.requests.tools.ContextManager;
+
+import org.apache.velocity.Template;
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.exception.ResourceNotFoundException;
+import org.apache.velocity.runtime.RuntimeConstants;
+
+public class VelocityManager implements IServiceLocator{		
+	
+	public void generateCode(String templateName,HttpServletRequest request, PrintWriter writer,int authorizationLevel,HashMap<String, Object> addedProperties) throws InstantiationException, IllegalAccessException
+	{						
+		VelocityContext vc=new VelocityContext();
+		ServiceLocator sl=(ServiceLocator)new ContextManager(request.getServletContext()).getAttribute(ServletContextPropertyKeys.serviceLocator);
+		GetDataHelpersManager gdhm=sl.getService(GetDataHelpersManager.class);
+		
+		for(Map.Entry<String, Class<? extends AbstractGetter>> entry:gdhm.getListRequestGetters().entrySet())
+		{
+			AbstractGetter getter=AbstractGetter.construct(entry.getValue(), request);
+			if(authorizationLevel>=getter.getExpectedStatusMask())
+				vc.put(entry.getKey(), getter);
+		}
+		if(addedProperties!=null)
+		{
+			for(Map.Entry<String, Object> entry:addedProperties.entrySet())
+				vc.put(entry.getKey(), entry.getValue());
+		}		
+				
+		try
+		{
+			Template template=Velocity.getTemplate(templateName);
+			template.merge(vc, writer);
+			writer.println();
+		}
+		catch(ResourceNotFoundException rnfe)
+		{
+			throw new NoSuchElementException();
+		}
+	}
+
+	@Override
+	public void endServiceLocator() {		
+	}
+
+	@Override
+	public void initServiceLocator(ClassesManager cm,ServletContext context) throws Exception {
+		Velocity.setProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH, PropertiesManager.getString(EnumPropertieKeys.PATH_WEBPAGES));
+		Velocity.setProperty(RuntimeConstants.RUNTIME_LOG,PropertiesManager.getString(EnumPropertieKeys.RUNTIME_LOG));
+		Velocity.init();		
+		
+	}
+	
+	
+
+}

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename local variable &apos;result&apos; in &apos;mamshops.tools.utils.GenericFunctions.getStringWithFirstUpperCase(...)&apos; to &apos;stringLowerCase&apos;&#x0D;&#x0A;- Original project: &apos;Mamshops.Tools&apos;&#x0D;&#x0A;- Original element: &apos;mamshops.tools.utils.GenericFunctions.getStringWithFirstUpperCase(String).result&apos;&#x0D;&#x0A;- Renamed element: &apos;result&apos;&#x0D;&#x0A;- Update references to refactored element" description="Rename local variable &apos;result&apos;" id="org.eclipse.jdt.ui.rename.local.variable" input="/src&lt;mamshops.tools.utils{GenericFunctions.java[GenericFunctions~getStringWithFirstUpperCase~QString;@result!4289!4331!4296!4301!QString;!0!false" name="stringLowerCase" references="true" stamp="1400486833580" version="1.0"/>
+</session>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Move element &apos;DynamicScriptHelper.java&apos; to &apos;Libs.Mamshops.Requests/src/mamshops.requests.tools&apos;&#x0D;&#x0A;- Original project: &apos;Libs.Mamshops.Resources&apos;&#x0D;&#x0A;- Destination element: &apos;Libs.Mamshops.Requests/src/mamshops.requests.tools&apos;&#x0D;&#x0A;- Original element: &apos;mamshops.resources.dynamicimages.DynamicScriptHelper.java&apos;&#x0D;&#x0A;- Update references to refactored element" description="Move compilation unit" destination="=Libs.Mamshops.Requests/src&lt;mamshops.requests.tools" element1="/src&lt;mamshops.resources.dynamicimages{DynamicScriptHelper.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.move" patterns="*" policy="org.eclipse.jdt.ui.moveResources" qualified="false" references="true" stamp="1410093960979" units="1" version="1.0"/>
+</session>

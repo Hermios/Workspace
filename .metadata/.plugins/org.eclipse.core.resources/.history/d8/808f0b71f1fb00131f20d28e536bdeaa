@@ -1,0 +1,122 @@
+package mamshops.main.getters;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.enums.CountrySpecial;
+import mamshops.businessmodels.propertykeys.node.LocalizationPropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.relationships.types.LocalizationRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.RequestParameterKeys;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.entries.PropertiesManager;
+
+public class CountryGetter extends AbstractGetter {
+	private static final String COUNTRY_CODE_WEBSITE="country.code.website";
+	private static final String DEFAULT_COUNTRY_CODE="default.country.code";
+	private static final String COOKIE_COUNTRY="userCountry";
+	
+	Long _localCountryId;
+	
+	public CountryGetter()
+	{
+		super(UserMethodAccess.none,SessionAttributeKeys.currentCountry);
+	}
+	
+	@HelperAnnotation(description="get id of the current country")
+	public Long getCountryId()
+	{
+		return _currentNode.getId();
+	}
+	
+	@HelperAnnotation(description="get code of the current country")
+	public String getCountryCode()
+	{
+		return _currentNode==null?"":_currentNode.getProperty(LocalizationPropertyKey.code).toString();
+	}
+	
+	@HelperAnnotation(description="return all the towns of the current selected country")
+	public List<TownGetter> getTowns()
+	{
+		List<MamsRelationship> listRelationships= _currentNode.getRelationships(LocalizationRelationshipType.country, false,true);
+		List<TownGetter> result=new ArrayList<>();
+		for(MamsRelationship relationship:listRelationships)
+			result.add(construct(TownGetter.class,_currentNode.getRelatedNode(relationship)));
+		return result;
+	}
+	
+	@HelperAnnotation(description="return all the countries")
+	public List<CountryGetter> getAllCountries(boolean undefinedAuthorized)
+	{
+		List<CountryGetter> result=new ArrayList<>();
+		for(MamsNode node:MamsNode.getNodes(NodeLabel.country))
+		{
+			if(undefinedAuthorized || !node.getProperty(LocalizationPropertyKey.code).equals(CountrySpecial.undefined.toString()))
+			result.add(construct(CountryGetter.class,node));
+		}
+		return result;
+	}
+	
+	@HelperAnnotation(description="get code of the geolocalized country")
+	public Long getLocalCountryCode()
+	{
+		//Is code already locally stored
+		if(_localCountryId==null)
+		{			
+			//Search if code is stored in a cookie
+			Cookie[] listCookies=_request.getCookies();
+			boolean cookieFound=false;
+			int i=0;
+			while(!cookieFound && i<listCookies.length)
+			{
+				cookieFound=listCookies[i].getName().equals(COOKIE_COUNTRY);
+				i++;
+			}
+			if(cookieFound)
+			{
+				_localCountryId=Long.parseLong(listCookies[i-1].getValue());
+				return _localCountryId;
+			}
+			String remoteAdress=_request.getRemoteAddr();
+			if(null==remoteAdress)
+				_localCountryId=(long)-1;
+			else
+			{
+				try {
+					Document doc=Jsoup.connect(PropertiesManager.getProperty(COUNTRY_CODE_WEBSITE)+remoteAdress).get();
+					String countryCode= doc.getElementsByTag("countryAbbrev").get(0).text();
+					List<MamsNode> listCountries=MamsNode.getNodes(NodeLabel.country, LocalizationPropertyKey.code, countryCode);
+					_localCountryId=listCountries.isEmpty()?(long)-1:listCountries.get(0).getId();
+				} 
+				catch (IOException e) 
+				{
+					_localCountryId=(long)-1;
+				}
+			}
+		}
+		if(_localCountryId==(long)-1)
+			_localCountryId=MamsNode.getNodes(NodeLabel.country, LocalizationPropertyKey.code, PropertiesManager.getProperty(DEFAULT_COUNTRY_CODE)).get(0).getId();
+		//add to cookie
+			HttpServletResponse response=(HttpServletResponse)_request.getAttribute(RequestParameterKeys.RESPONSE_PARAMETER_ID);
+		return _localCountryId;
+	}	
+	
+	@Override
+	public void initialize(HttpServletRequest request){
+		super.initialize(request);
+		_localCountryId=null;
+	}	
+}

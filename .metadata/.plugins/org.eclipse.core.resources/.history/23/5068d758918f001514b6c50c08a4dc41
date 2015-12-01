@@ -1,0 +1,8 @@
+package nikoBlex.businessmodels.enums;
+
+
+public interface EnumNodeLabel{
+	EnumNodeLabel getNodeLabel();
+
+	EnumNodeLabel valueOf(String nodeLabel);
+}

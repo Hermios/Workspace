@@ -1,0 +1,12 @@
+package mamshops.user.setters;
+
+import mamshops.businessmodels.database.MamsNode;
+
+
+public class TimeEventSetter{
+
+	public static void add(MamsNode userNode,String action,String parameter)
+	{
+		//MamsNode.create(NodeLabel.timeevent, TimeEventPropertyKey., value, getExistingOne)
+	}
+}

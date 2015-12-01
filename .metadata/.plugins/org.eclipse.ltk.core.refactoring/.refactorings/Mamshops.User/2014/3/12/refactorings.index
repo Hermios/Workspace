@@ -1,0 +1,68 @@
+1395092193922	Rename type 'IActionNode'
+1395092275173	Move compilation unit
+1395094414466	Delete element
+1395251507150	Rename type 'INode'
+1395253022662	Move compilation unit
+1395253030255	Delete element
+1395253131040	Rename type 'ServiceLocatorInterface'
+1395255418264	Delete element
+1395255446666	Delete element
+1395269633892	Rename type 'VelocityInstanceInterface'
+1395272459402	Rename field '_resourceBundle'
+1395307019003	Delete element
+1395390835159	Rename package 'mamshops.models.user'
+1395390843429	Move compilation unit
+1395390863874	Move compilation unit
+1395391236759	Rename field 'ATTRIBUTE_USER'
+1395392004835	Rename local variable 'actionHelper'
+1395392014759	Rename field '_mapActionHelpers'
+1395415161498	Move compilation unit
+1395415230959	Copy compilation units
+1395415250943	Rename type 'UserActionHelper'
+1395415324868	Rename local variable 'newUser'
+1395415336581	Rename method 'createUser'
+1395415360622	Delete element
+1395415364168	Copy compilation unit
+1395415373188	Rename type 'User'
+1395415406104	Rename field '_userNode'
+1395415422509	Rename type 'UserConstants'
+1395415432316	Rename type 'UserRequestHelper'
+1395415467346	Rename enum constant 'FRIEND'
+1395415475668	Rename type 'UserStatus'
+1395415639300	Rename method 'CreateUser'
+1395415667369	Rename local variable 'email'
+1395415688350	Rename method 'GetUser'
+1395415734755	Rename local variable 'email'
+1395415833469	Rename field 'EMAIL'
+1395415848234	Rename field 'USER_LABEL'
+1395416531727	Rename local variable 'email'
+1395416567809	Rename local variable 'cuurentShop'
+1395416578223	Rename field 'USER'
+1395416605410	Rename type 'UserRelationships'
+1395416631087	Rename field '_currentUser'
+1395416659656	Rename field '_attributeEmailId'
+1395416669868	Rename field 'ATTRIBUTE_EMAIL_ID'
+1395417961476	Rename type 'UserRelationShips'
+1395420302293	Copy package
+1395420314648	Move compilation unit
+1395420322668	Delete element
+1395420352041	Move compilation unit
+1395420611508	Rename type 'ObjectDescription'
+1395423576556	Rename field 'name'
+1395423594333	Rename field 'description'
+1395423598172	Rename field 'returnType'
+1395424007587	Rename method 'getFriend'
+1395424422707	Move compilation unit
+1395484366885	Rename type 'VelocityAnnotation'
+1395484405060	Move compilation unit
+1395484483017	Rename type 'RequestAnnotation'
+1395484501248	Delete element
+1395487291995	Rename local variable 'requestHelperClass'
+1395487299126	Rename local variable 'requestHelper'
+1395487552843	Rename type 'IVelocityInstance'
+1395488344494	Rename local variable 'velocityAnnation'
+1395492859593	Rename method 'setSex'
+1395493757661	Rename local variable 'wcm'
+1395493885996	Rename type 'ITools'
+1395494226978	Rename method 'generateObject'
+1395494324320	Delete element

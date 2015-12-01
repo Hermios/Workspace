@@ -1,0 +1,22 @@
+1447431465877	Rename package 'mamshops.admin.getters'
+1447431471143	Rename package 'mamshops.user.setters'
+1447431476969	Rename package 'mamshops.user.getters'
+1447431482043	Rename package 'mamshops.startup.tasks'
+1447431486587	Rename package 'mamshops.servlet'
+1447431516602	Rename package 'mamshops.properties'
+1447431521984	Delete element
+1447431526999	Delete element
+1447431533222	Delete elements
+1447431541218	Rename package 'mamshops.main.setters'
+1447431565716	Delete element
+1447431574616	Rename package 'mamshops.main.getters'
+1447431582379	Rename package 'mamshops.admin.setters'
+1447431588772	Delete element
+1447431598668	Delete element
+1447431604142	Delete element
+1447434199802	Rename package 'mamshops.generic.getter'
+1447435559878	Move package
+1447435668130	Move compilation unit
+1447435881957	Move compilation units
+1447435930723	Move compilation unit
+1447440976453	Rename package 'PropertyKeys'

@@ -1,0 +1,20 @@
+package mamshops.admin.setters;
+
+import mamshops.businessmodels.database.GraphHandler;
+import mamshops.businessmodels.propertykeys.node.INodePropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractSetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+
+public class AdminMethods extends AbstractSetter{
+
+	public AdminMethods() {
+		super(UserMethodAccess.admin, null, null, null);
+	}
+
+	public String sendCommand()
+	{
+		return GraphHandler.sendCommand(_parameter);
+	}
+}

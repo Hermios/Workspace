@@ -1,0 +1,69 @@
+package mamshops.businessmodels.shop;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.libs.annotations.HelperAnnotation;
+import mamshops.libs.businessmodels.Node;
+import mamshops.libs.businessmodels.NodeLabel;
+import mamshops.libs.businessmodels.propertykeys.ShopPropertyKey;
+import mamshops.libs.database.DatabaseManager;
+import mamshops.libs.velocity.IRequestVelocity;
+import mamshops.libs.velocity.IStaticVelocity;
+
+public class ShopVelocity implements IRequestVelocity,IStaticVelocity{
+	Node _currentShop;
+	
+	public ShopVelocity()	
+	{
+		
+	}
+	
+	@Override
+	public void setRequest(HttpServletRequest request) throws Exception {
+		Long shopId=(Long)request.getSession().getAttribute(NodeLabel.shop.toString());
+		if(shopId!=null)
+		_currentShop=new Node(shopId);		
+	}
+	
+	public ShopVelocity(Long nodeId)
+	{
+		_currentShop=new Node(nodeId);
+	}
+				
+	@HelperAnnotation(description="return the name of the shop")
+	public String getName()
+	{		
+		return get(ShopPropertyKey.name).toString();
+	}
+	
+	@HelperAnnotation(description="return the url of the shop")
+	public String getUrl()
+	{		
+		return get(ShopPropertyKey.url).toString();
+	}
+	
+	@HelperAnnotation(description="return the contact email of the shop")
+	public String getContactEmail()
+	{		
+		return get(ShopPropertyKey.contactEmail).toString();
+	}
+	
+	@HelperAnnotation(description="return all the shops")
+	public static List<ShopVelocity> getAllShops()
+	{
+		List<ShopVelocity> result=new ArrayList<>();
+		for(Long nodeId:DatabaseManager.getNodes(NodeLabel.shop))
+			result.add(new ShopVelocity(nodeId));
+		return result;
+	}
+	
+ 	private Object get(ShopPropertyKey propertyKey)
+	{
+		if(_currentShop==null)
+			return null;
+		return _currentShop.getProperty(propertyKey);
+	}
+}

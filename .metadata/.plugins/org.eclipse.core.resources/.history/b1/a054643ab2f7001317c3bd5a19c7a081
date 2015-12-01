@@ -1,0 +1,103 @@
+package mamshops.businessmodels.database;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import org.neo4j.graphdb.Relationship;
+
+import mamshops.businessmodels.propertykeys.relationships.IRelationshipPropertyKey;
+
+public class MamsRelationship
+{
+	private Relationship _relationship;
+	
+	public MamsRelationship(Long id)
+	{
+		_relationship=GraphDatabase.getRelationship(id);		
+	}
+	
+	public MamsRelationship(Relationship relationship)
+	{
+		_relationship=relationship;		
+	}
+	
+	public void setProperties(HashMap<IRelationshipPropertyKey,Object> listProperties)
+	{		
+		for(Map.Entry<IRelationshipPropertyKey, Object> entry:listProperties.entrySet())
+				GraphDatabase.setProperty(_relationship, entry.getKey(),entry.getValue());
+	}
+	
+	public void setProperty(IRelationshipPropertyKey key, Object value)
+	{
+		HashMap<IRelationshipPropertyKey,Object> listProperties=new HashMap<>();
+		listProperties.put(key, value);
+		setProperties(listProperties);
+	}
+	
+	public void removeProperties(List<IRelationshipPropertyKey> listKeys)
+	{
+		HashMap<IRelationshipPropertyKey,Object> listKeysHashMap=new HashMap<>();
+		for(IRelationshipPropertyKey key:listKeys)
+			listKeysHashMap.put(key, null);
+		setProperties(listKeysHashMap);
+	}
+	
+	public void removeProperty(IRelationshipPropertyKey key)
+	{
+		List<IRelationshipPropertyKey> listKeys=new ArrayList<>();
+		listKeys.add(key);
+		removeProperties(listKeys);
+	}
+
+	public Object getProperty(IRelationshipPropertyKey key)
+	{
+		return GraphDatabase.getProperty(_relationship, key);
+	}
+	
+	public MamsNode getNode(boolean startNode)
+	{
+		return new MamsNode(GraphDatabase.getRelationshipNode(_relationship, startNode));
+	}	
+	
+	public MamsNode getOtherNode(Long firstNode)
+	{
+		return new MamsNode(GraphDatabase.getOtherNode(new MamsNode(firstNode).getNode(), _relationship));
+	}
+	
+	public void remove()
+	{
+		GraphDatabase.removeRelationShip(_relationship);
+	}
+	
+	public String getType()
+	{
+		return GraphDatabase.GetRelationshipType(_relationship);
+	}
+	
+	public Long getId()
+	{
+		return _relationship.getId();
+	}
+	
+	static List<MamsRelationship> getListMamsRelationship(List<Relationship> listRelationships)
+	{
+		List<MamsRelationship> result=new ArrayList<>();
+		for(Relationship relationship:listRelationships)
+			result.add(new MamsRelationship(relationship));
+		return result;
+	}
+
+	static List<Relationship> getListRelationship(List<MamsRelationship> listRelationships)
+	{
+		List<Relationship> result=new ArrayList<>();
+		for(Relationship relationship:listRelationships)
+			result.add(new MamsRelationship(relationship));
+		return result;
+	}
+	
+	Relationship getRelationship()
+	{
+		return _relationship;
+	}
+}

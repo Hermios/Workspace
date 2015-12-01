@@ -1,0 +1,8 @@
+package nikoBlex.businessmodels.enums;
+
+
+public interface INodeLabel {
+	INodeLabel getNodeLabel();
+
+	staticabstract  INodeLabel valueOf(String nodeLabel);
+}

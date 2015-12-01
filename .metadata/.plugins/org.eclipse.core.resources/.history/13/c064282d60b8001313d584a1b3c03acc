@@ -1,0 +1,13 @@
+package mamshops.admin.dataLister;
+
+import java.util.Comparator;
+
+public class MethodsComparator implements Comparator<MethodDescription>
+{
+
+	@Override
+	public int compare(MethodDescription methodDesc1, MethodDescription methodDesc2) {
+		// TODO Auto-generated method stub
+		return methodDesc1.getName().compareTo(methodDesc2.getName());
+	}	
+}

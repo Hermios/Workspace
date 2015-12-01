@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;HtmlPageHttpRequest.java&apos; to &apos;Mamshops.Admin/src/mamshops.admin.servlets&apos;&#x0D;&#x0A;- Original project: &apos;Mamshops.Main&apos;&#x0D;&#x0A;- Destination element: &apos;Mamshops.Admin/src/mamshops.admin.servlets&apos;&#x0D;&#x0A;- Original element: &apos;mamshops.httpRequests.webcontent.HtmlPageHttpRequest.java&apos;" description="Copy compilation unit" destination="=Mamshops.Admin/src&lt;mamshops.admin.servlets" element1="/src&lt;mamshops.httpRequests.webcontent{HtmlPageHttpRequest.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1396309325826" units="1" version="1.0"/>
+</session>

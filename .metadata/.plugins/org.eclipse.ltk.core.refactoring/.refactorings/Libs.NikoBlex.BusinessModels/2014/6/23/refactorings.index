@@ -1,0 +1,21 @@
+1401717890995	Rename method 'getListHashMap'
+1401789542135	Rename local variable 'listRelationships'
+1401794353788	Move compilation unit
+1401794363641	Move compilation unit
+1401956872906	Rename local variable 'listTargetNodes'
+1401957115651	Rename method 'getRelationship'
+1401974728078	Delete element
+1401974759976	Delete element
+1401982016572	Delete element
+1401990954756	Rename type 'MamsPropertiesContainer'
+1401991003102	Delete element
+1401991114382	Move compilation units
+1401991156457	Rename package 'mamshops.businessmodels.propertykey'
+1401991188170	Delete element
+1401991214579	Rename package 'mamshops.relationships.propertykeys'
+1401991233088	Rename package 'mamshops.relationships.types'
+1401991246480	Move compilation unit
+1401991251629	Move compilation unit
+1401993835117	Delete element
+1402049240790	Delete element
+1402089973291	Delete element

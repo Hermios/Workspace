@@ -1,0 +1,170 @@
+package mamshops.businessmodels.database;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+
+import org.neo4j.graphdb.Node;
+
+import mamshops.businessmodels.propertykeys.node.GenericPropertyKey;
+import mamshops.businessmodels.propertykeys.node.INodePropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.relationships.types.IMamsRelationshipType;
+
+public class MamsNode {
+	private Node _node;
+	
+	public MamsNode(Long nodeId)
+	{
+		_node=GraphDatabase.getNode(nodeId);
+	}
+	
+	public MamsNode(Node node)
+	{
+		_node=node;
+	}
+		
+	public void setProperties(HashMap<INodePropertyKey,Object> listProperties)
+	{		
+		for(Map.Entry<INodePropertyKey, Object> entry:listProperties.entrySet())
+				GraphDatabase.setProperty(_node, entry.getKey(),entry.getValue());
+	}
+	
+	public void setProperty(INodePropertyKey key, Object value)
+	{
+		HashMap<INodePropertyKey,Object> listProperties=new HashMap<>();
+		listProperties.put(key, value);
+		setProperties(listProperties);
+	}
+	
+	public void removeProperties(List<INodePropertyKey> listKeys)
+	{
+		HashMap<INodePropertyKey,Object> listKeysHashMap=new HashMap<>();
+		for(INodePropertyKey key:listKeys)
+			listKeysHashMap.put(key, null);
+		setProperties(listKeysHashMap);
+	}
+	
+	public void removeProperty(INodePropertyKey key)
+	{
+		List<INodePropertyKey> listKeys=new ArrayList<>();
+		listKeys.add(key);
+		removeProperties(listKeys);
+	}
+
+	public Object getProperty(INodePropertyKey key)
+	{
+		return GraphDatabase.getProperty(_node, key);
+	}
+	
+	public static MamsNode create(NodeLabel nodeType,INodePropertyKey key,Object value,boolean getExistingOne)
+	{		
+		Node node=GraphDatabase.createNode(nodeType, key, value,getExistingOne);
+		if(node==null)
+			return null;
+		MamsNode mamsNode=new MamsNode(node);
+		mamsNode.setProperty(GenericPropertyKey.registerDate, Calendar.getInstance().getTimeInMillis());
+		return mamsNode;
+	}
+	
+	public static MamsNode get(NodeLabel nodeType,INodePropertyKey id,Object value)
+	{
+		List<MamsNode> nodes=getNodes(nodeType,id,value);
+		return nodes.size()!=0?nodes.get(0):null;
+	}
+	
+	public void delete()
+	{
+		for(MamsRelationship relationship:getRelationships(null, true, true))
+			relationship.remove();
+		_node.delete();
+	}
+	
+	public static List<MamsNode> getNodes(NodeLabel nodeType)
+	{
+		List<Node> listNodes=GraphDatabase.getNodes(nodeType);
+		
+		return getListMamsNode(listNodes);
+	}
+	
+	public static List<MamsNode> getNodes(NodeLabel nodeType,INodePropertyKey id,Object value)
+	{
+		List<Node> listNodes=GraphDatabase.findNodesByLabelAndProperty(nodeType, id, value);
+		return getListMamsNode(listNodes);
+	}
+	
+	public List<MamsRelationship> getRelationships(IMamsRelationshipType type,boolean startNode,boolean endNode)
+	{
+		return MamsRelationship.getListMamsRelationship(GraphDatabase.getRelationshipsFromNode(_node, type,startNode,endNode));
+	}	
+	
+	public MamsRelationship createRelationship(Long targetId,IMamsRelationshipType type)
+	{
+		return new MamsRelationship(GraphDatabase.createRelationshipTo(_node, new MamsNode(targetId)._node,type));
+	}	
+
+	public MamsRelationship getRelationship(Long targetId,IMamsRelationshipType relationShipType)
+	{
+		List<MamsRelationship> listRelationships=MamsRelationship.getListMamsRelationship((GraphDatabase.getRelationshipsFromNode(_node, relationShipType, true, true)));
+		MamsRelationship result=null;
+		ListIterator<MamsRelationship> iteratorMamsRelationship= listRelationships.listIterator();
+		while(iteratorMamsRelationship.hasNext() && result==null)
+		{
+			MamsRelationship mamsRelationship=iteratorMamsRelationship.next();			
+			if(GraphDatabase.getOtherNode(_node,mamsRelationship.getRelationship()).getId()==targetId)
+				result=mamsRelationship;
+		}
+		return result;
+	}
+	
+	public List<MamsNode> getRelatedNodes(List<MamsRelationship> listrelationships)
+	{
+		List<MamsNode> result=new ArrayList<>();
+		for(MamsRelationship relationship:listrelationships)
+			result.add(new MamsNode(GraphDatabase.getOtherNode(_node,relationship.getRelationship())));
+		return result;
+	}
+	
+	public MamsNode getMiddleNode(MamsNode startNode, MamsNode finalNode,NodeLabel middleNodeLabel)
+	{
+		
+	}
+	
+	public List<MamsNode> getNodesPath(List<MamsRelationship> listRelationships,Integer depth)
+	{
+		GraphDatabase.getTraverser(startNode, relationships, depth)
+	}
+	
+	public MamsNode getRelatedNode(MamsRelationship relationship)
+	{
+		List<MamsRelationship> listRs=new ArrayList<>();
+		listRs.add(relationship);
+		return getRelatedNodes(listRs).get(0);
+	}
+	
+	public NodeLabel getLabel()
+	{		
+		return NodeLabel.valueOf(GraphDatabase.getNodeLabel(_node));
+	}
+		
+	public Long getId()
+	{
+		return _node.getId();
+	}
+
+	static List<MamsNode> getListMamsNode(List<Node> listNodes)
+	{
+		List<MamsNode> result=new ArrayList<>();
+		for(Node node:listNodes)
+			result.add(new MamsNode(node));
+		return result;
+	}
+
+	Node getNode()
+	{
+		return _node;
+	}
+}

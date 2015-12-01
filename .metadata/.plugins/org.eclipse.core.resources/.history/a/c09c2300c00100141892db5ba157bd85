@@ -1,0 +1,123 @@
+package mamshops.user.getters;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang.NullArgumentException;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.propertykeys.node.INodePropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.propertykeys.relationships.FriendshipPropertyKey;
+import mamshops.businessmodels.relationships.types.UserRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.main.getters.CountryGetter;
+import mamshops.main.getters.TownGetter;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.resources.dynamicimages.DynamicImageHelper;
+import mamshops.resources.dynamicimages.UserImageType;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.utils.GenericFunctions;
+
+public class FriendGetter extends AbstractGetter{
+	private Long _userId;
+	private MamsRelationship _currentRelationship;
+	public FriendGetter()
+	{
+		super(UserMethodAccess.user,SessionAttributeKeys.currentFriend);
+	}
+		
+	
+	@HelperAnnotation(description="return the current country where the user lives")
+	public List<CountryGetter> getDeliveringCountries()
+	{
+		return getRelatedNodes(CountryGetter.class,UserRelationshipType.deliveringcountry);
+	}
+	
+	@HelperAnnotation(description="return true if the user choose a public status")
+	public String getStatus()
+	{
+		return getAttribute(UserPropertyKey.status,true);
+	}
+	
+	public boolean canAdd()
+	{
+		_currentRelationship=null;
+		if(_userId==null)
+			_userId=(Long)_session.getAttribute(SessionAttributeKeys.currentUser.toString());
+		if(_userId==null)
+			throw new NullArgumentException("user Id");
+		_currentRelationship=_currentNode.getRelationship(_userId, UserRelationshipType.friend);
+		return _currentRelationship==null;
+	}
+	
+	public boolean isValidated()
+	{
+		if(canAdd())
+			return false;
+		return _currentRelationship.getProperty(FriendshipPropertyKey.validate)!=null;
+	}	
+	
+	@HelperAnnotation(description="return a list of shops for the current user")
+	public List<UserShopGetter> getFriendShops(int count,boolean random)
+	{
+		List<UserShopGetter> listNodeShops=getRelatedNodes(UserShopGetter.class,UserRelationshipType.usershop);
+		return GenericFunctions.getEditedList(listNodeShops,count, random);
+	}
+	
+	public TimeEventGetter getLastTimeEvent()
+	{
+		return getRelatedNode(TimeEventGetter.class, UserRelationshipType.nexttimeevent);
+	}
+	
+	public boolean canValidate()
+	{
+		if(isValidated())
+			return false;
+		Iterator<MamsRelationship> iteratorRelationships=_currentNode.getRelationships(UserRelationshipType.friend, true, false).iterator();
+		boolean relFound=false;
+		while(!relFound && iteratorRelationships.hasNext())
+			relFound=iteratorRelationships.next().getOtherNode(_currentNode.getId()).getId().equals(_userId);
+		return relFound;				
+	}
+		
+	@HelperAnnotation(description="return a list of users matching the search value")
+	public List<FriendGetter> findFriends()
+	{		
+		HashMap<Long,FriendGetter> result=new HashMap<>();
+		
+		String parameter=(String)_session.getAttribute(SessionAttributeKeys.currentParameter.toString());		
+		if(parameter==null)
+			throw new NullArgumentException("friend parameter");
+		if(Pattern.compile(".+@.+\\.[a-z]+").matcher(parameter).matches())
+		{
+			MamsNode node=MamsNode.get(NodeLabel.user, UserPropertyKey.email, parameter.toLowerCase());
+			Long id=node!=null?node.getId():null;
+			result.put(id,construct(FriendGetter.class,node));			
+		}
+		List<INodePropertyKey> listProps=new ArrayList<>();
+		listProps.add(UserPropertyKey.firstname);
+		listProps.add(UserPropertyKey.name);
+
+		String regex=".*"+parameter+".*";		
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.user,listProps , regex))
+			result.putIfAbsent(node.getId(),construct(FriendGetter.class,node));		
+
+		for(String word:parameter.split(" "))
+			regex+=".*(?="+word+").*";
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.user,listProps , regex))
+			result.putIfAbsent(node.getId(),construct(FriendGetter.class,node));		
+		regex=".*(?:"+parameter.replace(" ", "|")+").*";
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.user,listProps , regex))
+			result.putIfAbsent(node.getId(),construct(FriendGetter.class,node));		
+
+		return new ArrayList<>(result.values());
+	}	
+
+}

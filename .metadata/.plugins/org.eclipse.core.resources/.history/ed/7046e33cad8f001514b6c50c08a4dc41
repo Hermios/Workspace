@@ -1,0 +1,22 @@
+package nikoBlex.requests.getset;
+
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import nikoBlex.requests.getset.AbstractNodeGetSet;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+import nikoBlex.usecases.user.IUserAuthorizationLevel;
+import nikoBlex.businessmodels.database.GraphRelationship;
+import nikoBlex.businessmodels.enums.GenericPropertyKey;
+import nikoBlex.businessmodels.enums.INodePropertyKey;
+import nikoBlex.businessmodels.relationships.types.IGraphRelationshipType;
+
+public abstract class AbstractGetter extends AbstractGetSet{	
+	
+	protected AbstractGetter(IUserAuthorizationLevel authorizationLevel,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(authorizationLevel, sessionAttributeKey);
+	}	
+}

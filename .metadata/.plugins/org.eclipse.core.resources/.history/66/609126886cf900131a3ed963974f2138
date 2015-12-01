@@ -1,0 +1,32 @@
+package mamshops.businessmodels.tools;
+
+import javax.servlet.http.HttpSession;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.tools.entries.PropertiesManager;
+
+public class NodesTools {
+	private final static String IS_EVERYONE_ADMIN="admin.debug.everyoneisadmin";
+	private final static String LIST_ADMIN="list.admin.mail";
+	
+	public static UserMethodAccess getUserStatus(Long userId)
+	{
+		if(IS_EVERYONE_ADMIN.equals("true"))
+			return UserMethodAccess.admin;	
+		if(userId==null)
+			return UserMethodAccess.none;
+		MamsNode currentUser=new MamsNode((Long)userId);
+		if(currentUser.getProperty(UserPropertyKey.codeValidation)!=null && PropertiesManager.getProperty(IS_MAILVALIDATION_MANDATORY).equals("true"))
+			return UserMethodAccess.basicuser;
+		String email=currentUser.getProperty(UserPropertyKey.email).toString();	
+		if(email.equals(PropertiesManager.getProperty("default.admin.email")))
+			return UserMethodAccess.admin;
+		String listAdmins=PropertiesManager.getProperty(LIST_ADMIN);
+		if (listAdmins.contains(email+";"))
+			return UserMethodAccess.admin;
+		else
+			return UserMethodAccess.user;
+		
+	}
+}

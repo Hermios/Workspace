@@ -1,0 +1,7 @@
+package mamshops.businessmodels.containers;
+
+import mamshops.libs.httpRequests.IActionHelper;
+
+public class ContainerActionHelper implements IActionHelper {
+
+}

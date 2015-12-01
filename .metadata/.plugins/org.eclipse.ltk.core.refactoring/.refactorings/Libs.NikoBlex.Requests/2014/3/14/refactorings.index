@@ -1,0 +1,10 @@
+1396276526586	Move compilation unit
+1396299861660	Rename method 'InitServiceLocator'
+1396299869422	Rename method 'EndServiceLocator'
+1396300110761	Rename local variable 'service'
+1396300307859	Rename package 'mamshops.libs.servlectContext'
+1396302495370	Rename method 'getFiles'
+1396302556957	Rename method 'getPropertiesFiles'
+1396304713241	Delete element
+1396307948937	Rename field '_resourceBundleDir'
+1396308173894	Rename field '_mapResourceBundles'

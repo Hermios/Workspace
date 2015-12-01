@@ -1,0 +1,97 @@
+package mamshops.businessmodels.shop;
+
+import java.util.HashMap;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import mamshops.libs.annotations.HelperAnnotation;
+import mamshops.libs.businessmodels.INodePropertyKey;
+import mamshops.libs.businessmodels.Node;
+import mamshops.libs.businessmodels.NodeLabel;
+import mamshops.libs.businessmodels.propertykeys.ShopPropertyKey;
+import mamshops.libs.entries.PropertiesManager;
+import mamshops.libs.httpRequests.IActionHelper;
+import mamshops.libs.httpRequests.RequestParameterProperty;
+
+public class ShopActionHelper implements IActionHelper {	
+	
+	private String _attributeUrlId;
+	private String _attributeParameterId;
+	private HttpSession _session;
+	private HttpServletRequest _request;
+	private Node _currentShop;
+	
+	public ShopActionHelper()
+	{
+		_attributeUrlId=PropertiesManager.getProperty(RequestParameterProperty.ATTRIBUTE_URL_ID);		
+		_attributeParameterId=PropertiesManager.getProperty(RequestParameterProperty.ATTRIBUTE_PARAMETER_ID);		
+	}
+	
+	@HelperAnnotation(description="create a new shop with the data specified",inputParameter={RequestParameterProperty.ATTRIBUTE_URL_ID})
+	public void createShop()
+	{		
+		String url=_request.getParameter(_attributeUrlId);
+		HashMap<INodePropertyKey, Object> initValues=new HashMap<>();
+		Long newShop=Node.create(NodeLabel.shop, ShopPropertyKey.url, url, initValues);
+		_session.setAttribute(NodeLabel.shop.toString(), newShop);
+	}
+		
+	@HelperAnnotation(description="set the name of the shop",inputParameter={RequestParameterProperty.ATTRIBUTE_PARAMETER_ID})
+	public boolean setName()
+	{
+		return set(ShopPropertyKey.name);
+	}
+	
+	@HelperAnnotation(description="set the name of the shop",inputParameter={RequestParameterProperty.ATTRIBUTE_PARAMETER_ID})
+	public boolean setUniverse()
+	{
+		return set(ShopPropertyKey.universe);
+	}
+	
+	@HelperAnnotation(description="set the email contact of the shop",inputParameter={RequestParameterProperty.ATTRIBUTE_PARAMETER_ID})
+	public boolean setContactEmail()
+	{
+		return set(ShopPropertyKey.contactEmail);
+	}
+	
+	public boolean setSubUniverse()
+	{
+		return set(ShopPropertyKey.subUniverse);
+	}
+	
+	public boolean setCountry()
+	{
+		return set(ShopPropertyKey.country);
+	}
+		
+	public boolean setTown()
+	{
+		return set(ShopPropertyKey.town);
+	}	
+		
+	public void selectShop()
+	{				
+		String url=_request.getParameter(_attributeUrlId);		
+		Long currentShop=Node.getNode(NodeLabel.shop, ShopPropertyKey.url, url);
+		if(currentShop==null)
+			return;
+		_session.setAttribute(NodeLabel.shop.toString(), currentShop);			
+	}
+		
+	private boolean set(ShopPropertyKey name)
+	{
+		if(_currentShop==null)
+			return false;
+		_currentShop.setProperty(name, _request.getParameter(_attributeParameterId));
+		return _currentShop.getProperty(name)!=null; 
+	}
+
+	@Override
+	public void setRequest(HttpServletRequest request) {
+		_request=request;
+		_session=request.getSession();
+		Long shopId=(Long)_session.getAttribute(NodeLabel.shop.toString());
+		if(shopId!=null)
+		_currentShop=new Node(shopId);
+	}
+}

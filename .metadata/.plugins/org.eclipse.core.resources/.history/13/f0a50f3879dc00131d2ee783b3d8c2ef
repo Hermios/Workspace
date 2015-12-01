@@ -1,0 +1,136 @@
+package mamshops.requests.dynamicContent;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.apache.velocity.exception.ResourceNotFoundException;
+
+import mamshops.businessmodels.node.MamsNode;
+import mamshops.businessmodels.propertykey.UserPropertyKey;
+import mamshops.requests.session.SessionAttributeKeys;
+import mamshops.requests.tomcat.ServletContextPropertyKeys;
+import mamshops.requests.tools.RequestGenericFunctions;
+import mamshops.requests.velocity.IRequestGetter;
+import mamshops.requests.velocity.VelocityManager;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.serviceLocators.ServiceLocator;
+import mamshops.tools.utils.PathConstructor;
+
+public class DynamicPageHelper implements IRequestGetter{
+	private HttpServletRequest _request;
+	private final static String ERROR_404_PAGE_NAME="webpage.404.name";
+	private final static String DEFAULT_CONNECTED_PAGE="webpage.page.default.connected";
+	private final static String DEFAULT_NOTCONNECTED_PAGE="webpage.page.default.notconnected";
+	private final static String DEFAULT_FRAME="webframe.default.name";	
+	private final static String WEBPAGE_DIRECTORY="webcontent.webpage.directory";
+	private final static String HEADER_NOTCONNECTED="webframe.header.notconnected";
+	private final static String HEADER_USER_CONNECTED="webframe.header.connected.user";
+	private final static String HEADER_ADMIN_CONNECTED="webframe.header.connected.admin";			
+	private final static String KEEP_SELECTED_FRAME="webframe.selected.keep";
+	
+	private MamsNode _currentUser;
+	public static void doGet(HttpServletRequest request, HttpServletResponse response){
+		String target=RequestGenericFunctions.getTarget(request);		
+		if(target==null|| !target.endsWith("html"))
+			target=(String)request.getSession().getAttribute(SessionAttributeKeys.currentPage.toString())!=null?
+					PropertiesManager.getProperty(DEFAULT_CONNECTED_PAGE):
+					PropertiesManager.getProperty(DEFAULT_NOTCONNECTED_PAGE);
+		target=PathConstructor.getPath(new String[]{PropertiesManager.getProperty(WEBPAGE_DIRECTORY),target});
+		ServiceLocator sl=(ServiceLocator)request.getServletContext().getAttribute(ServletContextPropertyKeys.SERVICE_LOCATOR);
+		VelocityManager vm=sl.getService(VelocityManager.class);		 		 				 
+		PrintWriter pw=null;		
+		try 
+		{
+			pw = response.getWriter();		
+			try
+			{
+				vm.generateHtml(target,request, pw);
+			}
+			catch(ResourceNotFoundException rnfe)
+			{				
+				if(!target.endsWith(PropertiesManager.getProperty(ERROR_404_PAGE_NAME)))
+					response.sendRedirect(PropertiesManager.getProperty(ERROR_404_PAGE_NAME));
+				else 
+					rnfe.printStackTrace();
+				return;
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			pw.println();
+		} 
+		catch (IOException e) 	
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	@HelperAnnotation(description="load the frame defined as current")
+	public String getCurrentRightFrame()
+	{				
+		try
+		{
+			
+			if(_currentUser!=null && (boolean)_currentUser.getProperty(UserPropertyKey.keepVisitedFrame))				
+				return (String)_currentUser.getProperty(UserPropertyKey.lastVisitedFrame);
+			String currentPage=(String)_request.getSession().getAttribute(SessionAttributeKeys.currentFrame.toString());
+			if(PropertiesManager.getProperty(KEEP_SELECTED_FRAME).equals("true"))
+				_request.getSession().removeAttribute(SessionAttributeKeys.currentFrame.toString());
+			return currentPage!=null?
+					currentPage:			
+					PropertiesManager.getProperty(DEFAULT_FRAME);
+		}
+		catch(Exception e)
+		{
+			return PropertiesManager.getProperty(DEFAULT_FRAME);
+		}
+	}	
+	
+	@HelperAnnotation(description="load the current page")
+	public String getCurrentPage()
+	{				
+		try
+		{
+			String currentPage=(String)_request.getSession().getAttribute(SessionAttributeKeys.currentPage.toString());
+			if(currentPage!=null)
+				return currentPage;
+			return _currentUser!=null?				
+				(String)_currentUser.getProperty(UserPropertyKey.lastVisitedFrame):
+				PropertiesManager.getProperty(DEFAULT_FRAME);
+		}
+		catch(Exception e)
+		{
+			return PropertiesManager.getProperty(DEFAULT_FRAME);
+		}
+	}	
+	
+	@HelperAnnotation(description="load the current header")
+	public String getCurrentHeader()
+	{				
+		try
+		{
+			
+			if(_currentUser==null)
+				return PropertiesManager.getProperty(HEADER_NOTCONNECTED);
+			if((boolean)_currentUser.getProperty(UserPropertyKey.isAdmin))
+				return PropertiesManager.getProperty(HEADER_ADMIN_CONNECTED);
+			else
+				return PropertiesManager.getProperty(HEADER_USER_CONNECTED);
+		}
+		catch(Exception e)
+		{
+			return PropertiesManager.getProperty(DEFAULT_FRAME);
+		}
+	}	
+		
+	@Override
+	public void setRequest(HttpServletRequest request) {
+		_request=request;
+		Long currentUserId=(Long)_request.getSession().getAttribute(SessionAttributeKeys.currentUser.toString());
+		if(currentUserId!=null)
+			_currentUser=new MamsNode(currentUserId);
+	}	
+}

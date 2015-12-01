@@ -1,0 +1,15 @@
+1405935113335	Rename local variable 'listShops'
+1406210036541	Move compilation unit
+1406224045257	Rename method 'addShop'
+1406226217939	Rename method 'getComments'
+1406281291281	Rename local variable 'calendarLong'
+1406281297248	Rename local variable 'node'
+1406286547111	Rename field 'STARTUP_TASK_SHOP_UPDATE'
+1406372774350	Delete element
+1406373889978	Delete element
+1406374248928	Delete element
+1406374254652	Delete element
+1406374460255	Move compilation unit
+1406374468242	Move compilation unit
+1406375866324	Delete element
+1406387598079	Rename local variable 'requestParameterKey'

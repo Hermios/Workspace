@@ -1,0 +1,6 @@
+package nikoBlex.usecases.tasks;
+
+public class Snippet {
+	SessionAttributeKeys sessionAttributeKey
+}
+

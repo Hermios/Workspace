@@ -1,0 +1,45 @@
+package mamshops.user.getters;
+
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.requests.tools.RequestGenericTools;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public class BasicUserGetter extends CommonUserGetter{
+	
+	public BasicUserGetter()
+	{
+		super(UserMethodAccess.basicuser,SessionAttributeKeys.currentUser);
+	}
+	
+	public BasicUserGetter(UserMethodAccess status)
+	{
+		super(status,SessionAttributeKeys.currentUser);
+	}
+	
+	@HelperAnnotation(description="return the language of the user")
+	public String getLocale()
+	{
+		return getAttribute(UserPropertyKey.language,true);
+	}
+		
+	@HelperAnnotation(description="return the email of the user")
+	public String getEmail()
+	{
+		return getAttribute(UserPropertyKey.email,true);
+	}
+	
+	@HelperAnnotation(description="return true if the email of the user was validated")
+	public boolean isEmailValidated()
+	{
+		return RequestGenericTools.getUserStatusMask(_session)>UserMethodAccess.basicuser.getMask();
+	}
+	
+	public String getValidationCode()
+	{
+		return getAttribute(UserPropertyKey.codeValidation,true);
+	}
+
+}

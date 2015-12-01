@@ -1,0 +1,16 @@
+package nikoBlex.usecases.user;
+
+public interface IUserAuthorizationLevel {
+	
+		int getAuthorizationLevel();
+}
+
+public enum DefaultUserAuthorizationLevel implements IUserAuthorizationLevel{
+	ADMIN(1000),
+	NONE(0)
+
+	@Override
+	public int getAuthorizationLevel() {
+		return 
+	}
+}

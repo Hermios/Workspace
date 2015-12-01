@@ -1,0 +1,6 @@
+package nikoBlex.usecases.comment;
+
+public interface IEnumComment extends IEnumeration{
+	public final static IEnumComment comment=new IEnumComment() {
+	};
+}

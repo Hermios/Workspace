@@ -1,0 +1,6 @@
+package nikoBlex.usecases.user;
+
+public interface IUserAuthorizationLevel {
+	
+		int getAuthorizationLevel();
+}

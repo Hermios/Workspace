@@ -1,0 +1,8 @@
+package nikoBlex.usecases.comment;
+
+import nikoBlex.businessmodels.enums.ICommonNode;
+
+public interface IEnumComment extends ICommonNode{
+	public final static IEnumComment comment=new IEnumComment() {
+	};
+}

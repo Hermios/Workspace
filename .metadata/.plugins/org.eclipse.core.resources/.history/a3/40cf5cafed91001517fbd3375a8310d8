@@ -1,0 +1,22 @@
+package nikoBlex.requests.authorizationlevels;
+
+public interface IUserAuthorization {
+	
+		int getAuthorizationLevel();
+}
+
+public enum DefaultUserAuthorizationLevel implements IUserAuthorization{
+	ADMIN(1000),
+	NONE(0);
+	
+	private final int authorizationLevel;
+	
+	private DefaultUserAuthorizationLevel(int authorizationLevel) {
+			this.authorizationLevel=authorizationLevel;
+	}
+	
+	@Override
+	public int getAuthorizationLevel() {
+		return authorizationLevel;
+	}
+}

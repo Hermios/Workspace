@@ -1,0 +1,164 @@
+package mamshops.servlet;
+
+import java.io.IOException;
+import java.util.List;
+
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import sun.print.PathGraphics;
+import mamshops.generic.getter.DynamicPageHelper;
+import mamshops.requests.get.GetDataHelper;
+import mamshops.requests.keys.RequestParameterKeys;
+import mamshops.requests.post.ActionHelper;
+import mamshops.requests.tools.DynamicScriptHelper;
+import mamshops.requests.tools.RequestGenericTools;
+import mamshops.resources.dynamicimages.DynamicImageManager;
+import mamshops.resources.enums.EnumResourceSource;
+import mamshops.resources.tools.ResourceTools;
+import mamshops.resources.tools.ResourcesParameterKeys;
+import mamshops.tools.entries.EnumPropertieKeys;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+import mamshops.tools.utils.PathConstructor;
+
+public class ServletFilter extends HttpServlet{	
+	
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	@Override
+	protected void doGet(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException
+	{			
+		request.setAttribute(RequestParameterKeys.response.toString(), response);
+		if(request.getParameter(RequestParameterKeys.doPost.toString())!=null)
+		{
+			doPost(request, response);
+			try
+			{
+				response.sendRedirect(request.getServletContext().getContextPath());
+			}
+			catch(IllegalStateException ise){ise.printStackTrace();}
+			return;
+		}
+		if(request.getParameter(RequestParameterKeys.isMethod.toString())!=null)
+		{
+			setParamsInSession(request);
+			try {
+				GetDataHelper.doGet(request, response, RequestGenericTools.getUserStatusMask(request.getSession()));
+			} catch (InstantiationException e) {
+				e.printStackTrace();
+			} catch (IllegalAccessException e) {
+				e.printStackTrace();
+			}
+			return;
+		}
+		String contentType=ResourceTools.getContentType(request.getRequestURI());
+		int userStatusMask=RequestGenericTools.getUserStatusMask(request.getSession());
+		if(contentType==null)
+			contentType="text/html";
+		response.setContentType(contentType);
+		if(contentType.equals("text/html"))
+		{
+			setParamsInSession(request);
+			DynamicPageHelper.doGet(request, response);
+			return;
+		}		
+		if(contentType.equals("text/javascript") && request.getParameter(PropertiesManager.getString(EnumPropertieKeys.DYNAMICSCRIPT_PARAM_KEY))!=null)
+		{
+			DynamicScriptHelper.doGet(request, response,userStatusMask);
+			return;
+		}
+		String path="";
+		EnumResourceSource currentPS=EnumResourceSource.StaticImage;
+		try
+		{
+			currentPS=EnumResourceSource.valueOf(request.getParameter(ResourcesParameterKeys.getResourceSourceKey()));
+		}
+		catch(IllegalArgumentException |NullPointerException npe){}
+		switch(currentPS)
+		{
+			case Temp:
+				path=PropertiesManager.getString(EnumPropertieKeys.TEMP_DIRECTORY);
+				break;
+			case DynamicImage:
+				path=DynamicImageManager.getDynamicImagesRoot();
+				break;
+			default:
+				path=PathConstructor.getPath(PropertiesManager.getString(EnumPropertieKeys.WEBCONTENT_ROOT),ResourceTools.getStaticResourceRoot(request.getRequestURI()));
+				break;
+		}
+			
+		String fileName=RequestGenericTools.getTarget(request);	
+		RequestGenericTools.writeDataInResponse(PathConstructor.getPath(path,fileName), response);
+	}		
+	
+	@Override
+	protected void doPost(HttpServletRequest request, HttpServletResponse response)
+			throws ServletException, IOException {
+		try {
+			setParamsInSession(request);
+			ActionHelper.doPost(request, response,RequestGenericTools.getUserStatusMask(request.getSession()));
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	private static void setParamsInSession(HttpServletRequest request)
+	{		
+		if(!request.getParameterNames().hasMoreElements())
+			return;
+		List<String> authorizedAttrs=PropertiesManager.getList(EnumPropertieKeys.SESSION_AUTHORIZED_ATTRIBUTES,";");
+		HttpSession session=request.getSession();		
+		for(String authAttr:authorizedAttrs)
+			session.setAttribute(authAttr, request.getParameter(authAttr));
+		
+	}
+	
+	private static String findCurrentRoot(HttpServletRequest request)
+	{
+		String result=null;
+		HttpSession session=request.getSession();
+		String[] listRoots=(String[])session.getAttribute("listRootsExternalWebSite");
+		if(listRoots==null)
+			listRoots=new String[0];
+		int i=listRoots.length;
+		String uri=request.getRequestURI();
+		String[] newList=null;
+		if(!uri.startsWith("/root/"))
+		{
+			boolean rootFound=false;
+			while(!rootFound && i>0)
+			{
+				i--;
+				rootFound=GenericFunctions.websiteExists(PathConstructor.getURL("http://",listRoots[i],request.getRequestURL().toString()));
+			}
+			if(!rootFound)
+				return null;
+			
+			result=listRoots[i];
+			newList=new String[i+1];
+			for(int j=0;j<=i;j++)
+				newList[j]=listRoots[j];
+		}
+		else
+		{
+			uri=uri.replaceFirst("/root/","");
+			result=uri.substring(uri.lastIndexOf("/"),uri.length());
+			newList=new String[i+1];
+			for(int j=0;j<i;j++)
+				newList[j]=listRoots[j];
+			newList[i]=result;
+		}
+		session.setAttribute("listRootsExternalWebSite",newList);
+		return result;
+	}
+}

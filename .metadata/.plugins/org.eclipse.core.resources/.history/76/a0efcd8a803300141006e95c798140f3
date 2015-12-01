@@ -1,0 +1,252 @@
+package mamshops.main.getters;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.RandomStringUtils;
+import org.apache.commons.lang.math.RandomUtils;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.ShopPropertyKey;
+import mamshops.businessmodels.relationships.types.CommentRelationshipType;
+import mamshops.businessmodels.relationships.types.ShopRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.requests.search.ISearch;
+import mamshops.resources.dynamicimages.DynamicImageHelper;
+import mamshops.resources.dynamicimages.ShopImageType;
+import mamshops.resources.tools.WebSiteImagesReader;
+import mamshops.startup.tasks.MoreSharedShopsLister;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.entries.EnumPropertieKeys;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+import mamshops.user.getters.CommentGetter;
+import mamshops.user.getters.UserShopGetter;
+
+public class ShopGetter extends AbstractGetter implements ISearch{	
+	String _url;
+	public ShopGetter()
+	{
+		super(UserMethodAccess.none,NodeLabel.shop,ShopPropertyKey.root,SessionAttributeKeys.currentShop);
+	}
+			
+	@HelperAnnotation(description="return the name of the shop")
+	public String getName()
+	{					
+		return exists()?getAttribute(ShopPropertyKey.name,true):"";		
+	}
+	
+	public String getRoot()
+	{
+		return exists()?getAttribute(ShopPropertyKey.root,true):"";
+	}
+	
+	public String getPropertyName()
+	{
+		return getRoot().replace("-", "_").toLowerCase();
+	}
+	
+	@HelperAnnotation(description="return the url of the shop")
+	public String getUrl()
+	{			
+		if(exists())
+			return getAttribute(ShopPropertyKey.url,true);
+		return _url==null?"":_url;
+	}
+	
+	@HelperAnnotation(description="return the contact email of the shop")
+	public String getContactEmail()
+	{		
+		return exists()?getAttribute(ShopPropertyKey.contactEmail,false):"";
+	}
+	
+	@HelperAnnotation(description="return shops")
+	public List<ShopGetter> getShops(Integer count,boolean random)
+	{
+		List<ShopGetter> result=new ArrayList<>();
+		int minUsers=PropertiesManager.getInteger(EnumPropertieKeys.MIN_USERS_DISPLAY_SHOP);
+		for(MamsNode node:MamsNode.getNodes(NodeLabel.shop))
+		{
+			ShopGetter sg=construct(ShopGetter.class, node);
+			if(sg.getAttribute(ShopPropertyKey.show, false).equals("true") || sg.getUserShops().size()>=minUsers)
+			result.add(sg);
+		}
+		result=GenericFunctions.getEditedList(result, count, random);
+		return result;
+	}
+
+	public String getScreenshot(boolean resize,boolean cut,Integer width,Integer height)
+	{
+		if(exists())
+		{
+			try {
+				return DynamicImageHelper.getChangedImage(_currentNode.getId(),ShopImageType.screenshot, resize,cut,null,0,width, height);
+			} catch (Exception e) {			
+				e.printStackTrace();
+				return "";
+			}
+		}	
+		if(_url.isEmpty())
+			return "";
+		try {
+			String snapshotPath= DynamicImageHelper.uploadImageFromSnapshot(_url);
+			File snapshotFile=new File(snapshotPath);
+			String extension="."+GenericFunctions.getFileExtension(snapshotPath);
+			String name=snapshotFile.getName().replace(extension, "");
+			File tempFile=new File(snapshotFile.getParent(),name+"_"+RandomStringUtils.randomAlphanumeric(10)+extension);
+			return DynamicImageHelper.getChangedImage(snapshotPath, tempFile.getAbsolutePath(), resize,cut,null, 0, width, height);
+		} catch (IOException e) {
+			e.printStackTrace();
+			return "";
+		}
+	}
+	
+	@HelperAnnotation(description="return the log of the shop")
+	public String getLogo(int width,int height)
+	{
+		try {
+			return DynamicImageHelper.getChangedImage(_currentNode.getId(),ShopImageType.logo, true,false,null,null,width, height);
+		} catch (Exception e) {			
+			e.printStackTrace();
+			return "";
+		}
+	}
+
+	public ShopGetter findShopFromUrl()
+	{						
+		MamsNode shopsNode=MamsNode.get(NodeLabel.shop, ShopPropertyKey.root, GenericFunctions.getUrlRoot(_parameter),false);
+		if(shopsNode!=null)
+			return construct(ShopGetter.class, shopsNode);
+		ShopGetter sg=construct(ShopGetter.class);		
+		sg._url=getValidUrl(_parameter);
+		return sg;
+	}
+	
+	public String getFormattedHtml()
+	{
+		String strUrl=getValidUrl(_parameter);
+		if(strUrl==null)
+			return null;
+		if(!strUrl.endsWith("/"))
+			strUrl+="/";
+		HttpURLConnection huc=null;
+		String result=null;
+		try {
+			URL url = new URL(strUrl);
+		HttpURLConnection.setFollowRedirects(true);			
+			huc = (HttpURLConnection) url.openConnection();
+		huc.setUseCaches(false);
+		huc.setAllowUserInteraction(false);
+		result=huc.getResponseMessage();
+		strUrl=huc.getURL().getPath();		
+		Pattern p=Pattern.compile("=(\"\\/)\\w");
+		File tempFile=new File(PropertiesManager.getString(EnumPropertieKeys.TEMP_DIRECTORY),RandomStringUtils.randomAlphanumeric(10)+".html");
+		Matcher m=p.matcher(result);
+		result=m.replaceAll(strUrl);
+		} catch (IOException ioe) {
+			ioe.printStackTrace();
+		}
+		finally
+		{
+			if(huc!=null)
+			huc.disconnect();
+		}
+		return result;
+	}
+	
+	@Override
+ 	protected void initialize(HttpServletRequest request) {
+		super.initialize(request);
+		if(request==null)
+			return;
+		if(_currentNode!=null)
+		{
+			_url=getUrl();
+			return;
+		}			
+		if(_parameter==null)
+			return;
+		_url=_parameter;
+		_currentNode=MamsNode.get(NodeLabel.shop, ShopPropertyKey.root, GenericFunctions.getUrlRoot(_url),false);
+		
+	}
+
+	@Override
+	public List<? extends ISearch> getSearchResult(String searchValue,
+			HttpServletRequest request) 
+	{
+		HashMap<Long,ShopGetter> result=new HashMap<>();
+		
+		String regex=".*"+searchValue+".*";		
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.shop,regex,ShopPropertyKey.name,ShopPropertyKey.root))
+			result.putIfAbsent(node.getId(),construct(ShopGetter.class,node));
+
+		for(String word:searchValue.split(" "))
+			regex+=".*(?="+word+").*";
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.shop,regex,ShopPropertyKey.name,ShopPropertyKey.root))
+			result.putIfAbsent(node.getId(),construct(ShopGetter.class,node));
+		regex=".*(?:"+searchValue.replace(" ", "|")+").*";
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.shop,regex,ShopPropertyKey.name,ShopPropertyKey.root))
+			result.putIfAbsent(node.getId(),construct(ShopGetter.class,node));
+		return new ArrayList<>(result.values());
+	}
+
+	@Override
+	public String getSearchDescription() 
+	{
+		return getName();
+	}
+
+	public List<String> getArticlePictures()
+	{
+		WebSiteImagesReader wsir=new WebSiteImagesReader(_parameter);
+		try 
+		{
+			return wsir.getWebSiteImages();
+		} 
+		catch (IOException e) {
+			e.printStackTrace();
+			return new ArrayList<>();
+		}
+	}
+	
+	public List<CommentGetter> getCommentGetters()
+	{
+		return getRelatedNode(CommentGetter.class,CommentRelationshipType.target).getPreviousComments();
+	}
+
+	public List<UserShopGetter> getUserShops()
+	{		
+		return getRelatedNodes(UserShopGetter.class, ShopRelationshipType.usershop);
+	}
+
+	public List<ShopGetter> getMoreSharedShops(Integer count)
+	{
+		return GenericFunctions.getEditedList(MoreSharedShopsLister.getList(), count, false);
+	}
+	
+	
+
+	private static String getValidUrl(String url)
+	{
+		if (GenericFunctions.websiteExists(url))			
+			return url;
+		else if(!url.startsWith("http://") && GenericFunctions.websiteExists("http://"+url))
+			return "http://"+url;	
+		else if(!url.startsWith("https://") && GenericFunctions.websiteExists("https://"+url))
+			return "https://"+url;
+		return null;
+	}
+}

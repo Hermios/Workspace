@@ -1,0 +1,23 @@
+package mamshops.resources.dynamicimages;
+
+import java.util.HashMap;
+
+import org.apache.commons.lang.RandomStringUtils;
+
+import mamshops.tools.utils.PathConstructor;
+
+public class ExternalWebsiteHelper {
+	private static HashMap<String,String> _mapWebsitesCodes=new HashMap<>();
+	
+	
+	public String ImageHandler(String webSiteRoot,String pictureUrl)
+	{
+		if(!_mapWebsitesCodes.containsKey(webSiteRoot))
+		{
+			_mapWebsitesCodes.put(webSiteRoot, RandomStringUtils.randomAlphanumeric(25));
+		}
+		String pictureFullUrl=PathConstructor.getURL(webSiteRoot,pictureUrl);
+		String picturePath=PathConstructor.getPath(webSiteId,pictureUrl);
+		return "";
+	}	
+}

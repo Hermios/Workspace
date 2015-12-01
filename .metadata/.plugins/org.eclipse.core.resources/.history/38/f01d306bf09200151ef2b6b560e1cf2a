@@ -1,0 +1,61 @@
+package nikoBlex.usecases.comment;
+
+import java.util.List;
+
+import nikoBlex.businessmodels.database.GraphNode;
+import nikoBlex.businessmodels.database.GraphRelationship;
+import nikoBlex.businessmodels.enums.INodePropertyKey;
+import nikoBlex.businessmodels.relationships.types.CommentRelationshipType;
+import nikoBlex.requests.authorizationlevels.IUserAuthorization;
+import nikoBlex.requests.getset.AbstractNodeSetter;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+import nikoBlex.usecases.user.AbstractUserGetter;
+
+public abstract class AbstractCommentSetter<NodeLabel extends Enum<NodeLabel>> extends AbstractNodeSetter<NodeLabel> {
+
+	public AbstractCommentSetter(IUserAuthorization authorizationLEvel, NodeLabel nodeLabel,INodePropertyKey refKey,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(authorizationLEvel, NodeLabel.comment,refKey,sessionAttributeKey);
+	}
+	
+	public void create()
+	{
+		@SuppressWarnings("unchecked")
+		AbstractUserGetter<NodeLabel> ug=construct(AbstractUserGetter.class);
+		_currentNode=GraphNode.create(NodeLabel.comment);
+		_parameter=ug.getId().toString();
+		addRelation(CommentRelationshipType.user);
+		_parameter=_parameters[0];
+		setAttribute(CommentPropertyKey.description);			
+		_parameter=_parameters[1];
+		Long targetId=Long.parseLong(_parameter);
+		GraphNode targetNode=new GraphNode(targetId);
+		List<GraphRelationship> listRels=targetNode.getRelationships(CommentRelationshipType.target, true, false);
+		if(!listRels.isEmpty())
+		{
+			GraphRelationship oldRel=listRels.get(0);
+			GraphNode previousNode =oldRel.getOtherNode(targetId);
+			oldRel.remove();
+			previousNode.createRelationship(getId(), CommentRelationshipType.target);
+		}
+		addRelation(CommentRelationshipType.target);
+	}
+			
+	public void addLike()
+	{
+		_parameter=construct(AbstractUserGetter.class).getId().toString();
+		addRelation(CommentRelationshipType.like);
+	}
+	
+	public void delete()
+	{
+		List<GraphRelationship> listRels=_currentNode.getRelationships(CommentRelationshipType.target, true, false);
+		if(listRels.size()>0)
+		{
+			GraphNode nextComment=_currentNode.getRelationships(CommentRelationshipType.target, false, true).get(0).getOtherNode(getId());
+			GraphNode previousComment=listRels.get(0).getOtherNode(getId());
+			nextComment.createRelationship(previousComment.getId(), CommentRelationshipType.target);
+		}
+		_currentNode.delete();
+	}
+}

@@ -1,0 +1,151 @@
+package mamshops.node.setters;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
+
+import mamshops.businessmodels.node.INodePropertyKey;
+import mamshops.businessmodels.node.UserNode;
+import mamshops.businessmodels.propertykey.UserPropertyKey;
+import mamshops.businessmodels.relationships.IMamsRelationshipType;
+import mamshops.businessmodels.relationships.MamsRelationship;
+import mamshops.relationsips.types.UserRelationshipKey;
+import mamshops.requests.action.IAction;
+import mamshops.requests.httpRequest.RequestParameterKeys;
+import mamshops.requests.session.SessionAttributeKeys;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+
+public class UserSetter implements IAction {	
+	
+	private String _attributeEmailId;
+	private String _attributePasswordId; 
+	private String _attributeParameterId;
+	private HttpSession _session;
+	private HttpServletRequest _request;
+	private UserNode _currentUser;	
+	
+	public UserSetter()
+	{
+		_attributeEmailId=PropertiesManager.getProperty(RequestParameterKeys.ATTRIBUTE_EMAIL_ID);
+		_attributePasswordId=PropertiesManager.getProperty(RequestParameterKeys.ATTRIBUTE_PASSWORD_ID);				
+	}
+	
+	@HelperAnnotation(description="create a new user",inputParameter={RequestParameterKeys.ATTRIBUTE_EMAIL_ID,RequestParameterKeys.ATTRIBUTE_PASSWORD_ID})
+	public void create()
+	{		
+		String email=_request.getParameter(_attributeEmailId);
+		String password=_request.getParameter(_attributePasswordId);
+		Long newUserId=UserNode.createUser(email);
+		if(newUserId==null)
+			return;
+		_currentUser=new UserNode(newUserId);
+		setLocale();
+		_currentUser.setProperty(UserPropertyKey.password, password);
+		_currentUser.setProperty(UserPropertyKey.codeValidation, GenericFunctions.getRandomString(15));		
+		if(_currentUser.getStatus()==UserNode.UserStatus.OK)
+			_session.setAttribute(SessionAttributeKeys.currentUser.toString(), newUserId);
+	}
+	
+	@HelperAnnotation(description="set the new password of the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void changePassword()
+	{
+		set(UserPropertyKey.password);
+	}
+	
+	@HelperAnnotation(description="set the language of the current user")	
+	public void setLocale()
+	{
+		_currentUser.setProperty(UserPropertyKey.language, _request.getLocale().toLanguageTag());
+	}
+	
+	@HelperAnnotation(description="set the name of the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})	
+	public void setName()
+	{
+		set(UserPropertyKey.name);
+	}
+	
+	@HelperAnnotation(description="set the nationality of the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setNationality()
+	{
+		replaceRelation(UserRelationshipKey.nationality);
+	}
+	
+	@HelperAnnotation(description="set the country where the current user lives",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setCountry()
+	{
+		replaceRelation(UserRelationshipKey.country);
+	}
+		
+	@HelperAnnotation(description="set true if the status of the current user is public, else false",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setPublic()
+	{
+		set(UserPropertyKey.isPublic);
+	}
+	
+	@HelperAnnotation(description="set true if current user is a male, false if she is a female, null if not defined",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setIsMale()
+	{
+		set(UserPropertyKey.sex);
+	}
+	
+	@HelperAnnotation(description="set the city where the current user lives",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})	
+	public void setTown()
+	{
+		replaceRelation(UserRelationshipKey.town);
+	}
+	
+	@HelperAnnotation(description="Log, define the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_EMAIL_ID,RequestParameterKeys.ATTRIBUTE_PASSWORD_ID})
+	public void LogUser()
+	{				
+		String email=_request.getParameter(_attributeEmailId);
+		String password=_request.getParameter(_attributePasswordId);
+		UserNode loggedUser=UserNode.getUser(email,password);
+		if(loggedUser.getStatus()==UserNode.UserStatus.OK)			
+			_session.setAttribute(SessionAttributeKeys.currentUser.toString(), loggedUser);			
+	}
+	
+	@HelperAnnotation(description="unlog the current user",inputParameter={"user"})	
+	public void deconnectUser()
+	{
+		_session.invalidate();				
+	}
+		
+	public void addShop()
+	{
+		
+	}
+				
+	private void set(INodePropertyKey id)
+	{
+		if(_currentUser!=null)
+			_currentUser.setProperty(id, _attributeParameterId);		
+	}
+
+	private void addRelation(IMamsRelationshipType relType)
+	{
+		Long targetId=Long.getLong(_attributeParameterId);
+		MamsRelationship.create(_currentUser.getId(), targetId, relType);
+	}
+	
+	private void replaceRelation(IMamsRelationshipType relType)
+	{
+		List<Long> listRels=_currentUser.getRelationships(relType, true, true);
+		if(!listRels.isEmpty())			
+		new MamsRelationship(listRels.get(0)).delete();
+		addRelation(relType);
+	}
+	
+	@Override	
+	public void setParams(HttpServletRequest request, String paramValue) {
+		_request=request;
+		_session=request.getSession();
+		Long userId=(Long)_session.getAttribute(SessionAttributeKeys.currentUser.toString());
+		if(userId!=null)
+			_currentUser=new UserNode(userId);	
+		_attributeParameterId=paramValue;
+		
+	}
+}

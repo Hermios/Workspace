@@ -1,0 +1,48 @@
+1393804994717	Rename type 'FilesManager'
+1394130192799	Rename method 'getOrUpdate'
+1394132933201	Rename type 'ClassLoaderLocator'
+1394132958034	Move compilation unit
+1394132963086	Move compilation unit
+1394143850989	Rename type 'VelocityInterface'
+1394219471353	Rename resource 'test_fr.properties'
+1394219512199	Copy file
+1394221713340	Delete element
+1394221717647	Delete element
+1394231373053	Delete element
+1394231995839	Delete elements
+1394305450068	Rename type 'WebContentManager'
+1394305474293	Rename package 'mamshops.webcontent'
+1394305489176	Rename type 'AbstractWebContent'
+1394305524073	Rename resource 'WebContentParameters.properties'
+1394305699703	Move compilation unit
+1394305720297	Rename type 'ActionServlet'
+1394305731257	Rename type 'HtmlMailWebContent'
+1394305742174	Rename type 'HtmlPageWebContent'
+1394305748783	Rename type 'ImageWebContent'
+1394305763243	Rename type 'ScriptWebContent'
+1394305768436	Rename type 'StyleWebContent'
+1394369361395	Delete element
+1394369507870	Delete element
+1394369540431	Rename package 'mamshops.texts'
+1394370018685	Move compilation unit
+1394370064967	Rename package 'mamshops.database.Nodes'
+1394370071082	Move compilation unit
+1394370076329	Move compilation unit
+1394370088279	Delete element
+1394370112488	Move compilation unit
+1394370147763	Move compilation unit
+1394370151629	Move compilation unit
+1394370154872	Move compilation unit
+1394370176458	Move compilation units
+1394370736541	Move compilation unit
+1394370753885	Move compilation unit
+1394370832421	Move compilation unit
+1394370843517	Move compilation unit
+1394370894449	Move compilation unit
+1394370898847	Move compilation unit
+1394386234773	Rename type 'ServiceLocatorInterface'
+1394386380346	Rename type 'AbstractServiceLocator'
+1394386761949	Rename method 'getIntance'
+1394387176885	Delete element
+1394387339990	Delete element
+1394388159766	Delete element

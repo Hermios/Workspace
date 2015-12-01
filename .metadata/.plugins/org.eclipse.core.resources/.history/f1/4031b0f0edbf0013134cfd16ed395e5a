@@ -1,0 +1,114 @@
+<section>
+	<script>
+	$("#submit").click(function(){
+		$.ajax({
+			type: 'POST',			
+			url:"$ActionHttpRequest.getURL('ShopActionHelper.createShop')",
+			success:successCreate,
+			data:{url:$("#shopurl").val()},
+			async:false
+			});			
+	});
+	
+	
+	function successCreate(result,status,xhr)
+	{
+		alert("success creation, yeah!!!");
+		$.post("$ActionHttpRequest.getURL('ShopActionHelper.setName')",{param:$("#shopname").val()},null);
+		$.post("$ActionHttpRequest.getURL('ShopActionHelper.setContactEmail')",{param:$("#shopcontactemail").val()},null);
+	}
+
+	</script>
+	<form class="fullpage" id="add_shop">
+		<div class="caption">Voici le formulaire provisoire d'ajout de shop</div>
+		<div class="tableau">	
+			<div>
+				<div class="label"><label class="shopurl" data-icon="u">Url du Shop:</label></div>
+				<div class="input"><input id="shopurl" name="shopurl" required="required" type="urlNew" placeholder="" /></div>
+			</div>
+			<div>
+				<div class="label"><label class="shopname" data-icon="n">Nom du Shop:</label></div>
+				<div class="input"><input id="shopname" name="shopname" required="required" type="text" placeholder="" /></div>
+			</div>
+			<div> 
+				<div class="label"><label class="shoplogo" data-icon="l">Logo du Shop:</label></div>
+				<div class="input_file"><input id="shoplogo" name="shoplogo" required="required" type="file" /></div>
+			</div>
+			<div> 
+				<div class="label"><label class="shopcontactemail" data-icon="@">Email de contact:</label></div>
+				<div class="input"><input id="shopcontactemail" name="shopcontactemail" required="required" type="email" placeholder=""/></div>
+			</div>
+			<div> 
+				<div class="label"><label class="shopcountry" data-icon="p">Pays:</label></div>
+				<div class="select">
+					<select id="shopcontactemail" name="shopcontactemail">
+						<option value="0"></option>
+						<option value="1"> France </option>
+						<option value="2"> Allemagne </option>
+						<option value="3"> Chine </option>
+						<option value="4">R&eacute;publique tch&egrave;que </option>
+					</select>
+				</div>
+			</div>
+			<div> 
+				<div class="label"><label class="shoptype" data-icon="p">Type de shop:</label></div>
+				<div class="select">
+					<select id="shoptype" name="shoptype">
+						<option value="0"></option>
+						<option value="1"> Shop de Marque </option>
+						<option value="2"> Shop Boutique </option>
+						<option value="3"> Shop 100% Net </option>
+					</select>
+				</div>
+			</div>
+			<div> 
+				<div class="label"><label class="shopcategorie" data-icon="p">Cat&eacute;gorie:</label></div>
+				<div class="select">
+					<select id="shopcategorie" name="shopcategorie">
+						<option value="0"></option>
+						<option value="1"> Mode Femme </option>
+						<option value="2"> Mode Enfant </option>
+						<option value="3"> Decoration Enfant </option>
+						<option value="4"> Etc... </option>
+					</select>
+				</div>
+			</div>
+			<div> 
+				<div class="label"><label class="shopunivers" data-icon="s">Style:</label></div>
+				<div class="select">
+					<select id="shopunivers" name="shopunivers">
+						<option value="0"></option>
+						<option value="1"> Design </option>
+						<option value="2"> Concept Store </option>
+						<option value="3"> Luxe </option>
+						<option value="4"> Etc... </option>
+					</select>
+				</div>
+			</div>
+			<div> 
+				<div class="label"><label class="shoparea" data-icon="d">Domaine:</label></div>
+				<div class="select">
+					<select id="shoparea" name="shoparea">
+						<option value="0"></option>
+						<option value="1"> Stylisme </option>
+						<option value="2"> cr&eacute;ateur de chocolats d'exception </option>
+						<option value="3"> Traiteur </option>
+						<option value="4"> Etc... </option>
+					</select>
+				</div>
+			</div>
+			<div> 
+				<div class="label"><label class="shopdescription" data-icon="@">Description:</label></div>
+				<div class="input"><textarea id="shopdescription" name="shopdescription" required="required" rows="6" placeholder="Que pensez-vous de ce shop?"/></div>
+			</div>
+			
+		</div>
+		<div class="button"> 
+			<input id="submit" type="button" value="Valider le formulaire de cr&eacute;ation du Shop"/>
+		</div>	
+	
+		<div class="info">
+								
+		</div>
+	</form>
+</section>

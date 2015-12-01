@@ -1,0 +1,46 @@
+package mamshops.admin.servlets;
+
+import java.io.IOException;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
+import javax.naming.Context;
+import javax.naming.InitialContext;
+import javax.servlet.Filter;
+import javax.servlet.FilterChain;
+import javax.servlet.FilterConfig;
+import javax.servlet.ServletException;
+import javax.servlet.ServletRequest;
+import javax.servlet.ServletResponse;
+
+import mamshops.data.managers.ClassesManager;
+import mamshops.serviceLocators.IServiceLocator;
+
+
+public class ServletFilter implements Filter{
+
+	@Override
+	public void destroy() {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void doFilter(ServletRequest arg0, ServletResponse arg1,
+			FilterChain arg2) throws IOException, ServletException {
+		System.out.println("toto");
+		MBeanServer mBeanServer = MBeanServerFactory.findMBeanServer(null).get(0);
+        ObjectName name = new ObjectName("Catalina", "type", "Server");
+        Server server = (Server) mBeanServer.getAttribute(name, "managedResource");
+        StandardEngine engine = (StandardEngine) server.findService("Catalina").getContainer();
+        StandardContext context = (StandardContext) engine.findChild(engine.getDefaultHost()).findChild(getServletContext().getContextPath());
+	}
+
+	@Override
+	public void init(FilterConfig arg0) throws ServletException {
+		// TODO Auto-generated method stub
+		
+	}
+
+}

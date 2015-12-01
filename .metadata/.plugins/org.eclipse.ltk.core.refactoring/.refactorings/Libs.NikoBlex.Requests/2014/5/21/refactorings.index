@@ -1,0 +1,14 @@
+1400499410997	Rename resource 'contexts.properties'
+1400501860821	Rename field '_adminContextRoot'
+1400501881719	Rename field '_mainContextRoot'
+1400501886253	Rename field '_userContextRoot'
+1400586521562	Move compilation unit
+1400586526884	Move compilation unit
+1400587222681	Move compilation units
+1400587345923	Delete element
+1400588956935	Delete element
+1400679595503	Move file
+1400708287156	Rename field 'RESOURCEBUNDLE_GENERIC_NAME'
+1400708304223	Rename field '_genericResourceBundle'
+1400770763790	Rename method 'generateHtml'
+1400771005957	Copy compilation unit

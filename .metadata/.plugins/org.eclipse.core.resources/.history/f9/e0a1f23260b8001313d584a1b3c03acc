@@ -1,0 +1,205 @@
+package mamshops.admin.dataLister;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.admin.contexts.ContextManager;
+import mamshops.libs.annotations.HelperAnnotation;
+import mamshops.libs.annotations.VelocityAnnotation;
+import mamshops.libs.entries.ClassesManager;
+import mamshops.libs.entries.PropertiesManager;
+import mamshops.libs.httpRequests.IActionHelper;
+import mamshops.libs.httpRequests.IRequestHelper;
+import mamshops.libs.velocity.IStaticVelocity;
+
+public class MethodsLister implements IRequestHelper{
+	private List<Class<?>> _listClassesMain=new ArrayList<>();
+	List<MethodDescription> _listRequestMethods=new ArrayList<>();
+	List<MethodDescription> _listActionMethods=new ArrayList<>();
+	List<MethodDescription> _listStaticVelocity=new ArrayList<>();
+	List<PropertyDescription> _listProperties=new ArrayList<>();
+	public MethodsLister() throws Exception
+	{
+		if(!PropertiesManager.getProperty("mamshops.debugMode").equals("true"))
+			return;
+		for(Class<IRequestHelper> requestHelperClass:ClassesManager.getClasses(_listClassesMain,IRequestHelper.class))
+		{
+			IRequestHelper requestHelper=requestHelperClass.newInstance();
+			for(Method currentMethod:requestHelper.getClass().getDeclaredMethods())
+			{
+				if(currentMethod.isAnnotationPresent(HelperAnnotation.class))				
+					_listRequestMethods.add(new MethodDescription(currentMethod));				
+			}
+		}
+		
+		Collections.sort(_listRequestMethods,new MethodsComparator());
+		
+		for(Class<IActionHelper> actionHelperClass:ClassesManager.getClasses(_listClassesMain,IActionHelper.class))
+		{
+			IActionHelper actionHelper=actionHelperClass.newInstance();
+			for(Method currentMethod:actionHelper.getClass().getDeclaredMethods())
+			{
+				if(currentMethod.isAnnotationPresent(HelperAnnotation.class))				
+					_listActionMethods.add(new MethodDescription(currentMethod));				
+			}
+		}
+		
+		Collections.sort(_listActionMethods,new MethodsComparator());
+
+		for(Class<IStaticVelocity> staticVelocityClass:ClassesManager.getClasses(_listClassesMain,IStaticVelocity.class))
+		{
+			IStaticVelocity staticVelocityObject=staticVelocityClass.newInstance();
+			for(Method currentMethod:staticVelocityObject.getClass().getMethods())
+			{
+				if(currentMethod.isAnnotationPresent(VelocityAnnotation.class))				
+					_listStaticVelocity.add(new MethodDescription(currentMethod,staticVelocityObject.getClass()));
+			}
+		}
+		
+		Collections.sort(_listStaticVelocity,new MethodsComparator());
+
+		for(Map.Entry<Object, Object> entry:PropertiesManager.getAllProperties().entrySet())
+			_listProperties.add(new PropertyDescription(entry));
+		
+		Collections.sort(_listProperties,new PropertiesComparator());
+
+	}	
+
+	public List<MethodDescription> getRequestHelpers()
+	{
+		return _listRequestMethods;
+	}
+	
+	public List<MethodDescription> getActionHelpers()
+	{
+		return _listActionMethods;
+	}
+	
+	public List<MethodDescription> getStaticVelocities()
+	{
+		return _listStaticVelocity;
+	}
+		
+	public List<PropertyDescription> getProperties()
+	{
+		return _listProperties;
+	}
+
+	@SuppressWarnings("unchecked")
+	@Override
+	public void setRequest(HttpServletRequest request) 
+	{						
+		try {
+			_listClassesMain=(List<Class<?>>) ContextManager.getRemoteContextObject("classesManager");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	public class PropertiesComparator implements Comparator<PropertyDescription>{
+
+		@Override
+		public int compare(PropertyDescription propDesc1, PropertyDescription propDesc2) {
+			// TODO Auto-generated method stub
+			return propDesc1.getKey().compareTo(propDesc2.getKey());
+		}
+	}
+	
+	public class PropertyDescription 
+	{
+		private Map.Entry<Object, Object> _entry;
+		
+		public PropertyDescription(Map.Entry<Object, Object> entry)
+		{
+			_entry=entry;
+		}
+		
+		public String getKey()
+		{
+			return _entry.getKey().toString();
+		}
+		
+		public String getValue()
+		{
+			return _entry.getValue().toString();
+		}
+
+
+	}
+
+	public class MethodDescription 
+	{
+		private String _name;
+		private String _parameters;
+		private String _description;
+		private String _returnType;
+		public MethodDescription(Method method)
+		{		
+			_name=method.getDeclaringClass().getSimpleName()+"."+method.getName();
+			
+			HelperAnnotation helperAnnotation=method.getAnnotation(HelperAnnotation.class);
+			if(helperAnnotation!=null)
+			{
+				_description=helperAnnotation.description();		
+				_parameters=String.join(",",helperAnnotation.inputParameter());
+			}		
+				
+			_returnType=method.getReturnType().getSimpleName();
+		}
+		
+		public MethodDescription(Method method,Class<?> currentClass)
+		{		
+			_name=currentClass.getSimpleName()+"."+method.getName();
+			
+			VelocityAnnotation velocityAnnotation=method.getAnnotation(VelocityAnnotation.class);		
+			if(velocityAnnotation!=null)
+			{
+				_description=velocityAnnotation.description();
+				List<String> parametersAsStrings=new ArrayList<>();
+				for(Parameter parameter:method.getParameters())
+					parametersAsStrings.add(parameter.getType().getSimpleName()+" "+parameter.getName());
+				_parameters=String.join(",",parametersAsStrings);
+			}
+				
+			_returnType=method.getReturnType().getSimpleName();
+		}
+
+		
+		public String getName()
+		{
+			return _name;
+		}
+		
+		public String getDescription()
+		{
+			return _description;
+		}
+		
+		public String getReturnType()
+		{
+			return _returnType;
+		}
+		
+		public String getParameters()
+		{
+			return _parameters;
+		}
+	
+}
+	public class MethodsComparator implements Comparator<MethodDescription>
+	{
+
+		@Override
+		public int compare(MethodDescription methodDesc1, MethodDescription methodDesc2) {
+			// TODO Auto-generated method stub
+			return methodDesc1.getName().compareTo(methodDesc2.getName());
+		}	
+	}
+}

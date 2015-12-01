@@ -1,0 +1,24 @@
+1448277809611	Infer generic type arguments
+1448284557289	Rename field '_methodAccess'
+1448284998652	Rename local variable 'userStatusInt'
+1448285024786	Rename local variable 'authorizationLevel'
+1448285583916	Copy package
+1448285632176	Copy package
+1448285676149	Delete element
+1448285678146	Delete element
+1448285685771	Copy compilation units
+1448285688697	Delete element
+1448285691287	Delete element
+1448285731029	Move compilation units
+1448285883818	Move compilation unit
+1448285888335	Move compilation unit
+1448286248371	Rename method 'getUserAuthorizationLevel'
+1448286256715	Rename type 'IUserAuthorizationLevel'
+1448286364746	Rename local variable 'userStatusMask'
+1448286503143	Rename method 'getUserAuthorizationValue'
+1448288393404	Move compilation unit
+1448289091380	Rename field '_authorizationLevel'
+1448289099933	Rename local variable 'methodAccess'
+1448389967066	Rename package 'nikoBlex.resources.dynamicimages'
+1448390048555	Delete element
+1448399494738	Delete element

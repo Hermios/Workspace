@@ -1,0 +1,74 @@
+package mamshops.main.getters;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.enums.UserEnums;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.ServletContextPropertyKeys;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.requests.search.ISearch;
+import mamshops.requests.search.SearchService;
+import mamshops.requests.tools.ContextManager;
+import mamshops.requests.tools.RequestGenericTools;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.serviceLocators.ServiceLocator;
+import mamshops.tools.utils.GenericFunctions;
+import mamshops.user.getters.FriendGetter;
+import mamshops.user.getters.UserGetter;
+
+public class GenericGetter extends AbstractGetter{
+
+	public GenericGetter()
+	{
+		super(UserMethodAccess.none,null,null,null);
+	}
+	
+	@HelperAnnotation(description="return true if a user is connected")
+	public boolean isConnected()
+	{
+		return _session.getAttribute(SessionAttributeKeys.currentUser.toString())!=null;
+	}
+
+	@HelperAnnotation(description="return true if a user is connected and is admin")
+	public boolean isAdmin()
+	{
+		return RequestGenericTools.getUserStatusMask(_session)==UserMethodAccess.admin.getMask();
+	}
+	
+	public List<FriendGetter> getUsers(Integer count, boolean random)
+	{
+		List<FriendGetter> result=new ArrayList<>();
+		UserGetter ug=construct(UserGetter.class);
+		for(MamsNode node:MamsNode.getNodes(NodeLabel.user))
+		{
+			//if(node.getProperty(UserPropertyKey.status).equals(UserEnums.UserStatus.privatestatus))
+			//	continue;
+			//if(!ug.exists() || 
+				if(!ug.getId().equals(node.getId()))
+				result.add(construct(FriendGetter.class, node));
+		}
+		result=GenericFunctions.getEditedList(result, count, true);
+		return result;
+	}
+
+	public List<ISearch> Search()
+	{
+		ServiceLocator sl=(ServiceLocator)new ContextManager(_request.getServletContext()).getAttribute(ServletContextPropertyKeys.serviceLocator);
+		SearchService searchService=sl.getService(SearchService.class);
+		List<ISearch> searchResults=new ArrayList<>();
+		for(Class<ISearch> searchClass:searchService.getListSearchModules())
+		{
+			try {
+				searchResults.addAll(searchClass.newInstance().getSearchResult(_parameter,_request));
+			} catch (InstantiationException | IllegalAccessException e) {
+				e.printStackTrace();
+			}
+		}
+		return searchResults;
+	}
+}

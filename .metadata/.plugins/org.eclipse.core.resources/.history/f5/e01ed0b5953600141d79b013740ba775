@@ -1,0 +1,38 @@
+package mamshops.resources.dynamicimages;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashMap;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.RandomStringUtils;
+
+import mamshops.tools.entries.EnumPropertieKeys;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.PathConstructor;
+
+public class ExternalWebsiteHelper {
+	private static HashMap<String,String> _mapWebsitesCodes=new HashMap<>();
+	
+	
+	public String ImageHandler(String webSiteRoot,String pictureUrl) throws IOException
+	{
+		String picturePath=PathConstructor.getPath(_mapWebsitesCodes.get(webSiteRoot),pictureUrl);		
+		File pictureFile=new File(PropertiesManager.getString(EnumPropertieKeys.TEMP_DIRECTORY),picturePath);
+		if(pictureFile.exists())
+			return picturePath;
+		if(!pictureFile.getParentFile().exists())
+			pictureFile.getParentFile().mkdirs();
+		URL pictureFullUrl = new URL(PathConstructor.getURL(webSiteRoot,pictureUrl));
+		FileUtils.copyURLToFile(pictureFullUrl, pictureFile);
+		return picturePath;
+	}
+	
+	public String PageHandler(String webSiteRoot, String pageUrl)
+	{
+		if(!_mapWebsitesCodes.containsKey(webSiteRoot))
+			_mapWebsitesCodes.put(webSiteRoot, RandomStringUtils.randomAlphanumeric(25));
+		
+	}
+}

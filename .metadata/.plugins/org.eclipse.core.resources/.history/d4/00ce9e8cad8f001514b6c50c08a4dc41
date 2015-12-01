@@ -1,0 +1,117 @@
+package nikoBlex.resources.tools;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URLClassLoader;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
+
+import nikoBlex.requests.getset.AbstractNodeGetter;
+import nikoBlex.tools.entries.PropertiesManager;
+import nikoBlex.tools.utils.ClassLoaderManager;
+
+public class ResourceBundlesGetter<NodeLabel extends Enum<NodeLabel>>  extends AbstractNodeGetter<NodeLabel>{
+
+	private ResourceBundle _resourceBundle;
+	private String _description;
+	public ResourceBundlesGetter() {
+		super(UserMethodAccess.admin, null, null, null);
+	}
+	
+	private ResourceBundlesGetter(File file) throws MalformedURLException, Exception
+	{
+		super(UserMethodAccess.admin, null, null, null);
+		_description=getDescription(file);
+		String fileName=file.getName().split("\\.")[0];
+		String[] fileNameArray={fileName,""};
+		if(fileName.contains("_"))
+			fileNameArray=fileName.split("_");
+		String resourceBundleDir=PropertiesManager.getResourceBundlesPath();
+		URLClassLoader resourceBundleCl=ClassLoaderManager.getURLClassLoader(resourceBundleDir);
+				
+		_resourceBundle=ResourceBundle.getBundle(fileNameArray[0],new Locale(fileNameArray[1]),resourceBundleCl);		
+	}
+	
+	public List<ResourceBundlesGetter> getAllResourceBundles() throws Exception, MalformedURLException
+	{
+		List<ResourceBundlesGetter> result=new ArrayList<>();
+		for(File file:PropertiesManager.getAllResourceBundles())
+			result.add(new ResourceBundlesGetter(file));
+		return result;
+	}
+	
+	public String getName()
+	{
+		return _resourceBundle.getBaseBundleName();
+	}
+	
+	public String getNameLower()
+	{
+		return getName().toLowerCase();
+	}
+	
+	public String getLanguage()
+	{
+		return _resourceBundle.getLocale().toLanguageTag();
+	}
+	
+	public String getDescription()
+	{
+		return _description;
+	}
+	
+	public HashMap<String,String> getEntries()
+	{
+		Enumeration<String> keysEnum= _resourceBundle.getKeys();
+		HashMap<String,String> result=new HashMap<>();
+		while(keysEnum.hasMoreElements())
+		{
+			String key=keysEnum.nextElement();
+			result.put(key, _resourceBundle.getString(key));
+		}
+		return result;
+	}
+
+	private static String getDescription(File file)
+	{
+		if(file.length()==0)
+			return "";
+		StringBuffer sb=new StringBuffer();
+		BufferedReader br=null;
+		try {
+			br=new BufferedReader(new FileReader(file));
+			String readLine=br.readLine();
+			while(readLine!=null && readLine.startsWith("#"))
+			{
+				readLine=readLine.substring(1);
+				sb.append(readLine);
+				sb.append(System.lineSeparator());
+				readLine=br.readLine();
+			}
+				
+		} catch (FileNotFoundException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		finally
+		{
+			if(br!=null)
+				try {
+					br.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+		}
+		return sb.toString();
+	}
+	
+}

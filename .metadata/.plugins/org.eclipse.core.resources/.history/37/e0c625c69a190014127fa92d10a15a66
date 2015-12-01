@@ -1,0 +1,174 @@
+package mamshops.user.getters;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.regex.Pattern;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.apache.commons.lang.NullArgumentException;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.enums.UserEnums.UserStatus;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.propertykeys.relationships.FriendshipPropertyKey;
+import mamshops.businessmodels.relationships.types.ShopRelationshipType;
+import mamshops.businessmodels.relationships.types.TimeEventRelationshipType;
+import mamshops.businessmodels.relationships.types.UserRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.main.getters.CountryGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.requests.search.ISearch;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.utils.GenericFunctions;
+
+public class FriendGetter extends CommonUserGetter implements ISearch{
+	private MamsRelationship _currentRelationship;
+	public FriendGetter()
+	{
+		super(UserMethodAccess.user,SessionAttributeKeys.currentFriend);
+	}
+	
+	@HelperAnnotation(description="return the current country where the user lives")
+	public List<CountryGetter> getDeliveringCountries()
+	{
+		return getRelatedNodes(CountryGetter.class,UserRelationshipType.deliveringcountry);
+	}
+	
+	@HelperAnnotation(description="return true if the user choose a public status")
+	public String getStatus()
+	{
+		return getAttribute(UserPropertyKey.status,true);
+	}
+	
+	public boolean canAdd()
+	{		
+		_currentRelationship=_currentNode.getRelationships(construct(UserGetter.class).getNode(), UserRelationshipType.friend).get(0);
+		return _currentRelationship==null;
+	}
+	
+	public boolean isValidated()
+	{
+		if(canAdd())
+			return false;
+		return _currentRelationship.getProperty(FriendshipPropertyKey.validate)!=null;
+	}	
+	
+	@HelperAnnotation(description="return a list of shops for the current user")
+	public List<UserShopGetter> getUserShops(Integer count,boolean random)
+	{
+		List<UserShopGetter> listNodeShops=getRelatedNodes(UserShopGetter.class,UserRelationshipType.usershop);
+		return GenericFunctions.getEditedList(listNodeShops,count, random);
+	}
+	
+	public List<UserShopGetter> getCommonUserShops(Integer count,boolean random)
+	{
+		MamsNode userNode=construct(UserGetter.class).getNode();
+		List<UserShopGetter> result=new ArrayList<>();		
+		for(MamsNode currentNode:_currentNode.getNodes(userNode,false,ShopRelationshipType.usershop,UserRelationshipType.usershop))
+		{
+			if(currentNode.getLabel().equals(NodeLabel.usershop))
+				result.add(construct(UserShopGetter.class,currentNode));
+		}
+		return GenericFunctions.getEditedList(result,count,random);
+	}
+	
+	public TimeEventGetter getLastTimeEvent()
+	{
+		return getRelatedNode(TimeEventGetter.class, TimeEventRelationshipType.nexttimeevent);
+	}
+	
+	public boolean canValidate()
+	{
+		if(isValidated())
+			return false;
+		Iterator<MamsRelationship> iteratorRelationships=_currentNode.getRelationships(UserRelationshipType.friend, true, false).iterator();
+		boolean relFound=false;
+		while(!relFound && iteratorRelationships.hasNext())
+			relFound=iteratorRelationships.next().getOtherNode(_currentNode.getId()).getId().equals(construct(UserGetter.class).getId());
+		return relFound;				
+	}	
+
+	@HelperAnnotation(description="return a list of users matching the search value")
+	public List<FriendGetter> findFriends()
+	{		
+		HashMap<Long,FriendGetter> result=new HashMap<>();
+		
+		if(_parameter==null)
+			throw new NullArgumentException("friend parameter");
+		if(Pattern.compile(".+@.+\\.[a-z]+").matcher(_parameter).matches())
+		{
+			MamsNode node=MamsNode.get(NodeLabel.user, UserPropertyKey.email, _parameter.toLowerCase(),false);
+			Long id=node!=null?node.getId():null;
+			result.put(id,construct(FriendGetter.class,node));			
+		}
+
+		String regex=".*"+_parameter+".*";		
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.user,regex,UserPropertyKey.firstname,UserPropertyKey.name))
+		{
+			if(canShowThisUser(node))	
+				result.putIfAbsent(node.getId(),construct(FriendGetter.class,node));
+		}
+					
+
+		for(String word:_parameter.split(" "))
+			regex+=".*(?="+word+").*";
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.user,regex,UserPropertyKey.firstname,UserPropertyKey.name))
+		{
+			if(canShowThisUser(node))
+				result.putIfAbsent(node.getId(),construct(FriendGetter.class,node));
+		}
+		regex=".*(?:"+_parameter.replace(" ", "|")+").*";
+		for(MamsNode node:MamsNode.getNodesWithRegex(NodeLabel.user,regex,UserPropertyKey.firstname,UserPropertyKey.name))
+		{
+			if(canShowThisUser(node))
+				result.putIfAbsent(node.getId(),construct(FriendGetter.class,node));
+		}
+		return new ArrayList<>(result.values());
+	}
+	
+	@Override
+	public List<? extends ISearch> getSearchResult(String searchValue,HttpServletRequest request) 
+	{		
+		FriendGetter fg=construct(FriendGetter.class);
+		return fg.findFriends();
+	}
+
+	private boolean canShowThisUser(MamsNode node)
+	{
+		if(node.getProperty(UserPropertyKey.status).toString().equals(UserStatus.publicstatus))
+			return true;
+		UserGetter userGetter= construct(UserGetter.class);
+		if(!userGetter.exists())
+			return false;
+		return userGetter.getFriend(node.getId())!=null;		
+	}
+	
+	@Override
+	public String getSearchDescription() {
+		return getFirstName()+" "+getName();
+	}	
+	
+	@Override
+	protected void initialize(HttpServletRequest request) {
+		super.initialize(request);
+		if(_currentNode==null)
+			return;
+		if(!this.isValidated())
+			_currentNode=null;
+	}
+	
+	@Override
+	protected void setNode(MamsNode node) {
+		super.setNode(node);
+		if(_currentNode==null)
+			return;
+		if(!this.isValidated())
+			_currentNode=null;
+	}
+
+}

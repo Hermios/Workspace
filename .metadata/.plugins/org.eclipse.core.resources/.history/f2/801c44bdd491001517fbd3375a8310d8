@@ -1,0 +1,39 @@
+package nikoBlex.usecases.comment;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import nikoBlex.businessmodels.database.GraphRelationship;
+import nikoBlex.businessmodels.relationships.types.CommentRelationshipType;
+import nikoBlex.requests.getset.AbstractNodeGetter;
+
+public abstract class AbstractCommentGetter<NodeLabel extends Enum<NodeLabel>> extends AbstractNodeGetter<NodeLabel>{
+
+	public AbstractCommentGetter() 
+	{
+		super(UserMethodAccess.user, NodeLabel.comment,null,null);
+	}
+
+	public String getDescription()
+	{
+		return getAttribute(CommentPropertyKey.description, true);
+	}
+		
+	public abstract AbstractNodeGetter<NodeLabel> getTarget();
+
+	public List<AbstractCommentGetter<NodeLabel>> getPreviousComments()
+	{		
+		List<AbstractCommentGetter<NodeLabel>> result=new ArrayList<>();
+		if(exists())
+			result.add(this);
+		List<GraphRelationship> listRels=_currentNode.getRelationships(CommentRelationshipType.target, true, false);
+		AbstractCommentGetter<NodeLabel> previousComment;
+		if(listRels.size()>0)
+		{
+			previousComment=construct(AbstractCommentGetter<NodeLabel>.class,listRels.get(0).getOtherNode(_currentNode.getId()));
+			if(previousComment.exists())
+				result.addAll(previousComment.getPreviousComments());
+		}
+		return result;
+	}
+}

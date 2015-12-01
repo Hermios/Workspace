@@ -1,0 +1,15 @@
+1403172624550	Delete element
+1403183074820	Rename local variable 'listRelationships'
+1403199352703	Rename local variable 'endNodeIsTarget'
+1403255507279	Delete element
+1403347023485	Rename package 'mamshops.businessmodels.DynamicImages'
+1403353959565	Rename local variable 'id'
+1403355852578	Rename local variable 'relationships'
+1403355868244	Rename local variable 'relationship'
+1403355915992	Rename local variable 'relationship'
+1403355942921	Rename local variable 'listMamsRelationships'
+1403368995108	Rename method 'GetRelationshipType'
+1403431072013	Move package
+1403432819110	Rename method 'getTraverser'
+1403432825257	Rename method 'getTraverser'
+1403434001603	Rename local variable 'listrelationships'

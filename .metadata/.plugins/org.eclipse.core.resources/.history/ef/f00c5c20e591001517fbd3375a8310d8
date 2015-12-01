@@ -1,0 +1,39 @@
+package nikoBlex.requests.tools;
+
+import javax.servlet.http.HttpServletRequest;
+
+import nikoBlex.requests.tools.RequestGenericTools;
+import nikoBlex.requests.getset.AbstractNodeGetter;
+import nikoBlex.requests.getset.IGetter;
+import nikoBlex.tools.entries.EnumPropertieKeys;
+import nikoBlex.tools.entries.PropertiesManager;
+import nikoBlex.tools.utils.PathConstructor;
+import nikoBlex.usecases.user.AbstractUserGetter;
+import nikoBlex.usecases.user.IUserAuthorizationLevel;
+
+public abstract class AbstractRequestUri implements IGetter extends AbstractGetSet{
+	String _contextPath;
+	String _protocol;
+	public AbstractRequestUri(IUserAuthorizationLevel authorizationLevel) {
+		super(authorizationLevel, null,null,null);
+	}
+
+	public String get(String ressourceName)
+	{
+		return PathConstructor.getURL(_contextPath,ressourceName);
+	}
+	
+	public String getLong(String ressourceName)
+	{
+		return PathConstructor.getURL(_protocol+PropertiesManager.getString(EnumPropertieKeys.SERVER_DNS),ressourceName);
+	}
+	
+	public abstract boolean isAdmin();
+	
+	@Override
+	public void initialize(HttpServletRequest request){
+		_protocol=request.isSecure()?"https":"http";
+		_protocol+="://";
+		_contextPath=request.getServletContext().getContextPath();
+	}
+}

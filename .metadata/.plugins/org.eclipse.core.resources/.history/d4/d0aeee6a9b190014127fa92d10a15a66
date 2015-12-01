@@ -1,0 +1,13 @@
+package mamshops.user.getters;
+
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+
+public class FollowerGetter extends AbstractGetter{
+
+	protected FollowerGetter() {
+		super(UserMethodAccess.user, null, null, SessionAttributeKeys.currentFollower);
+	}
+
+}

@@ -1,0 +1,20 @@
+package mamshops.servlet;
+
+
+import javax.servlet.ServletContextEvent;
+
+import org.apache.catalina.core.StandardContext;
+import org.apache.tomcat.util.http.mapper.Mapper;
+
+import mamshops.libs.servletContexts.AbstractApplicationServletContextListener;
+import mamshops.libs.servletContexts.ServletContextPropertyKeys;
+import mamshops.libs.utils.ContextTools;
+
+public class ApplicationServletContextListener extends AbstractApplicationServletContextListener{
+	@Override
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		super.contextInitialized(servletContextEvent);
+		
+		servletContextEvent.getServletContext().setAttribute(ServletContextPropertyKeys.CLASSES_MANAGER, _cm.getAllClasses());				
+	}
+}

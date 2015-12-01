@@ -1,0 +1,43 @@
+1401107232048	Rename local variable 'currentAction'
+1401182489454	Delete element
+1401200893854	Move package
+1401201275948	Delete element
+1401268178091	Rename field '_attributeParameterId'
+1401268543860	Rename method 'setPublic'
+1401270295065	Rename field '_attributeParameterId'
+1401270327000	Rename field '_attributeParameterId'
+1401270351766	Rename field '_attributeParameterId'
+1401398124200	Copy compilation unit
+1401398365041	Rename field '_currentUser'
+1401398778066	Move compilation unit
+1401398870615	Rename field '_currentUser'
+1401400549568	Rename type 'LocalizationSetter'
+1401400560996	Copy compilation unit
+1401400568193	Rename type 'CitySetter'
+1401400941074	Copy compilation unit
+1401401097962	Rename method 'getRelated'
+1401401388191	Move compilation unit
+1401402104350	Rename field '_selectedNode'
+1401402166526	Rename type 'LocalizationGetter'
+1401402318864	Copy compilation unit
+1401402550363	Delete element
+1401402559231	Rename field '_currentCountry'
+1401402584742	Copy compilation unit
+1401403125380	Rename field '_currentUser'
+1401445227935	Copy compilation unit
+1401445240064	Rename type 'UserGetter'
+1401445712673	Copy compilation unit
+1401445727016	Rename type 'UserSetter'
+1401445878813	Rename type 'NotValidatedUserGetter'
+1401445887758	Rename type 'UserGetter'
+1401445982891	Rename type 'UserGetter'
+1401446010066	Rename type 'ValidUserGetter'
+1401446019699	Rename type 'NotValidatedUserSetter'
+1401450844621	Rename local variable 'userSetter'
+1401544818559	Rename package 'mamshops.admin.database'
+1401544826822	Move compilation unit
+1401544830918	Copy compilation unit
+1401544834963	Move compilation unit
+1401544839351	Delete element
+1401544842198	Delete element
+1401544844029	Delete element

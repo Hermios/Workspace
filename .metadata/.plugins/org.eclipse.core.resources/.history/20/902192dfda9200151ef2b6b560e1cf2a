@@ -1,0 +1,43 @@
+package nikoBlex.usecases.dynamicimages;
+
+import nikoBlex.requests.tools.RequestGenericTools;
+import nikoBlex.resources.enums.EnumResourceSource;
+import nikoBlex.resources.tools.ResourceTools;
+import nikoBlex.resources.tools.ResourcesParameterKeys;
+import nikoBlex.tools.entries.EnumPropertieKeys;
+import nikoBlex.tools.entries.PropertiesManager;
+import nikoBlex.tools.utils.PathConstructor;
+
+public class ServletFilterCallStaticImage {
+	static void CallStaticImage()
+	{
+
+		String path="";
+		
+		EnumResourceSource currentPS=EnumResourceSource.StaticImage;
+		try
+		{
+			currentPS=EnumResourceSource.valueOf(request.getParameter(ResourcesParameterKeys.getResourceSourceKey()));
+		}
+		catch(IllegalArgumentException |NullPointerException npe){}
+		switch(currentPS)
+		{
+			case Temp:
+				path=PropertiesManager.getString(EnumPropertieKeys.TEMP_DIRECTORY);
+				break;
+			case DynamicImage:
+				path=DynamicImageManager.getDynamicImagesRoot();
+				break;
+			default:
+				path=PathConstructor.getPath(PropertiesManager.getString(EnumPropertieKeys.WEBCONTENT_ROOT),ResourceTools.getStaticResourceRoot(request.getRequestURI()));
+				break;
+		}
+			
+		
+		String fileName=RequestGenericTools.getTarget(request);	
+		path=PathConstructor.getPath(path,fileName);
+		if(!isLocalRequest)
+			path=downloadExternalData(request,contentType);
+		RequestGenericTools.writeDataInResponse(path, response);
+	}
+}

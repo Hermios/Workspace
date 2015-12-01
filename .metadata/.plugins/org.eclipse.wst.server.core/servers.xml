@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<servers>
+  <server auto-publish-setting="3" auto-publish-time="1" configuration-id="/Servers/Apache Tomcat v7.0.52 at localhost-config" hostname="localhost" id="Apache Tomcat v7.0.52 at localhost" name="Apache Tomcat v7.0.52 at localhost" runtime-id="Apache Tomcat v7.0.52" server-type="org.eclipse.jst.server.tomcat.70" server-type-id="org.eclipse.jst.server.tomcat.70" start-timeout="2000" stop-timeout="2000" testEnvironment="false" timestamp="44">
+    <list key="modules" value0="NikoBlex.Samples::org.eclipse.jst.jee.server:NikoBlex.Samples::jst.web::3.0"/>
+  </server>
+</servers>

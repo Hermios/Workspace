@@ -1,0 +1,241 @@
+package mamshops.businessmodels.database;
+
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+import mamshops.businessmodels.node.INodePropertyKey;
+import mamshops.businessmodels.node.NodeLabel;
+import mamshops.businessmodels.relationships.IRelationshipPropertyKey;
+import mamshops.businessmodels.relationships.MamsRelationshipType;
+import mamshops.libs.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+
+import org.neo4j.tooling.GlobalGraphOperations;
+import org.neo4j.graphdb.DynamicLabel;
+import org.neo4j.graphdb.GraphDatabaseService;
+import org.neo4j.graphdb.Label;
+import org.neo4j.graphdb.Node;
+import org.neo4j.graphdb.Relationship;
+import org.neo4j.graphdb.RelationshipType;
+import org.neo4j.graphdb.ResourceIterable;
+import org.neo4j.graphdb.Transaction;
+import org.neo4j.graphdb.factory.GraphDatabaseFactory;
+
+public class DatabaseManager{
+	private final static String GRAPH_PATH="neo4j.graphdb.path";
+	private final static String GRAPH_ARCHIVE_DIR="archive.graph.directory";
+	private final static String GRAPH_ARCHIVE_PREFIX="archive.graph.prefix";
+	private static final String EXCEPTION_STOP_SERVER="server.exception.interrupt";
+	
+	private static DatabaseManager _instance;
+	GraphDatabaseService _graph;
+	
+	private DatabaseManager()
+	{				
+		if(_graph!=null)
+			return;
+		File currentGraph=new File(PropertiesManager.getProperty(GRAPH_PATH));
+		DateFormat dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
+		Calendar cal = Calendar.getInstance();		
+		String copyGraphName=PropertiesManager.getProperty(GRAPH_ARCHIVE_PREFIX)+dateFormat.format(cal.getTime());
+		try {
+			GenericFunctions.copyFolder(currentGraph, new File(PropertiesManager.getProperty(GRAPH_ARCHIVE_DIR),copyGraphName));
+			connect();
+		} catch (IOException e) {
+			e.printStackTrace();
+			if(PropertiesManager.getProperty(EXCEPTION_STOP_SERVER).equals("true"))
+			{
+				java.lang.System.exit(1); 
+				return;
+			}
+			
+		}
+		
+	}
+		
+	private static DatabaseManager getInstance()
+	{
+		if(_instance==null)
+			_instance=new DatabaseManager();
+		return _instance;
+	}	
+		
+	public static void connect()
+	{
+		if(getInstance()._graph==null)
+			getInstance()._graph=new GraphDatabaseFactory().newEmbeddedDatabase(PropertiesManager.getProperty(GRAPH_PATH));
+	}
+	
+	public static void deconnect()
+	{
+		if(getInstance()._graph!=null)
+		{
+			getInstance()._graph.shutdown();
+			getInstance()._graph=null;
+		}
+	}
+	
+	public static void clear() {
+		if(_instance==null)
+			return;
+		deconnect();
+		_instance=null;
+	}
+	
+	private static RelationshipType getRelationshipType(final MamsRelationshipType type)
+	{
+		RelationshipType result=new RelationshipType() {
+			
+			public String name() {
+				return type.toString();
+			}
+		};
+		return result;
+	}
+		
+	private static void endTx(Transaction tx)
+	{
+		tx.success();
+		tx.close();
+	}	
+			
+	public static void setNodeProperty(long _nodeId,INodePropertyKey id,Object value)	
+	{
+		if(value==null)
+			return;
+		Transaction tx=getInstance()._graph.beginTx();		
+		getInstance()._graph.getNodeById(_nodeId).setProperty(id.toString(), value);
+		endTx(tx);
+	}
+	
+	public static Object getNodeProperty(long nodeId,INodePropertyKey id)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Node node=getInstance()._graph.getNodeById(nodeId);
+		if (node==null || !node.hasProperty(id.toString()))
+			return null;		
+		Object result=node.getProperty(id.toString());
+		endTx(tx);
+		return result;
+	}
+	
+	public static long createNode(NodeLabel labelName)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Label label=DynamicLabel.label(labelName.toString());
+		long result=getInstance()._graph.createNode(label).getId();
+		endTx(tx);
+		return result;
+	}
+	
+	public static List<Long> findNodesByLabelAndProperty(NodeLabel labelName,INodePropertyKey id,Object value)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Label label=DynamicLabel.label(labelName.toString());		
+		ResourceIterable<Node> allNodes= getInstance()._graph.findNodesByLabelAndProperty(label, id.toString(), value);	
+		List<Long> result=new ArrayList<Long>();
+		for(Node currentNode:allNodes)
+			result.add(currentNode.getId());
+		endTx(tx);
+		return result;
+	}
+
+	public static String getNodeLabel(long nodeId)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Label label=getInstance()._graph.getNodeById(nodeId).getLabels().iterator().next();
+		endTx(tx);
+		return label.toString();
+	}
+	
+	public static long getOtherNode(long nodeId,long relationShipId)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Node node=getInstance()._graph.getNodeById(nodeId);
+		Relationship rs=getInstance()._graph.getRelationshipById(relationShipId);
+		long result=rs.getOtherNode(node).getId();
+		endTx(tx);
+		return result;
+	}
+		
+	public static long createRelationshipTo(long nodeId,long targetId,mamshops.businessmodels.relationships.MamsRelationshipType relationShipType)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Node node=getInstance()._graph.getNodeById(nodeId);
+		Node targetNode=getInstance()._graph.getNodeById(targetId);
+		long result=node.createRelationshipTo(targetNode, getRelationshipType(relationShipType)).getId();
+		endTx(tx);
+		return result;
+	}	
+	
+	public static List<Long> getRelationshipsFromNode(long nodeId,mamshops.businessmodels.relationships.MamsRelationshipType relationShipType)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Node node=getInstance()._graph.getNodeById(nodeId);
+		Iterable<Relationship> iterableRelationships=node.getRelationships(getRelationshipType(relationShipType));
+		List<Long> result=new ArrayList<Long>();
+		for(Relationship rs:iterableRelationships)
+			result.add(rs.getId());
+		endTx(tx);
+		return result;
+	}
+	
+	public static void setRelationshipProperty(long rsId,IRelationshipPropertyKey id,Object value)	
+	{
+		Transaction tx=getInstance()._graph.beginTx();		
+		getInstance()._graph.getRelationshipById(rsId).setProperty(id.toString(), value);
+		endTx(tx);
+	}
+	
+	public static Object getRelationshipProperty(long rsId,IRelationshipPropertyKey id)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Object result=getInstance()._graph.getRelationshipById(rsId).getProperty(id.toString());		
+		endTx(tx);
+		return result;
+	}
+	
+	public static long getRelationshipNode(long rsId,boolean startRelationship)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Relationship rs=getInstance()._graph.getRelationshipById(rsId);
+		long result;
+		if(startRelationship)
+			result=rs.getStartNode().getId();
+		else
+			result=rs.getEndNode().getId();
+		endTx(tx);
+		return result;
+	}
+	
+	public static String getRelationshipType(long rsId)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		String name=getInstance()._graph.getRelationshipById(rsId).getType().name();
+		endTx(tx);
+		return name;
+	}
+		
+	public static List<Long> getNodes(NodeLabel nodeLabel)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		Label label=DynamicLabel.label(nodeLabel.toString());
+		List<Long> result=new ArrayList<>();
+		for(Node currentNode:GlobalGraphOperations.at(getInstance()._graph).getAllNodesWithLabel(label))
+			result.add(currentNode.getId());
+		endTx(tx);
+		return result;
+	}
+	
+	public static void removeRelationShip(long relationShipId)
+	{
+		Transaction tx=getInstance()._graph.beginTx();
+		getInstance()._graph.getRelationshipById(relationShipId).delete();
+		endTx(tx);
+	}
+}

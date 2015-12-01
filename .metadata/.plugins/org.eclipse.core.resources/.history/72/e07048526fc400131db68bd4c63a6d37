@@ -1,0 +1,3 @@
+mamshops.debugMode=false
+server.exception.interrupt=true
+webcontent.path.alias=WebContent

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy 2 elements to &apos;Mamshops.Test/src/mamshops.generic.getter&apos;&#x0D;&#x0A;- Original project: &apos;Mamshops.Main&apos;&#x0D;&#x0A;- Destination element: &apos;Mamshops.Test/src/mamshops.generic.getter&apos;&#x0D;&#x0A;- Original elements:&#x0D;&#x0A;     mamshops.generic.getter.RequestUri.java&#x0D;&#x0A;     mamshops.generic.getter.ResourcesBundlesPage.java" description="Copy compilation units" destination="=Mamshops.Test/src&lt;mamshops.generic.getter" element1="/src&lt;mamshops.generic.getter{RequestUri.java" element2="/src&lt;mamshops.generic.getter{ResourcesBundlesPage.java" files="0" flags="589830" folders="0" id="org.eclipse.jdt.ui.copy" policy="org.eclipse.jdt.ui.copyResources" stamp="1406374483625" units="2" version="1.0"/>
+</session>

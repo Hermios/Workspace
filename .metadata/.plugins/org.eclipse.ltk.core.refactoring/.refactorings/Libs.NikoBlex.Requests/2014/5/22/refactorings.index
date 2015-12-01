@@ -1,0 +1,30 @@
+1401216012161	Copy compilation unit
+1401270127360	Rename field '_attributeParamId'
+1401381058152	Rename local variable 'imagePath'
+1401399276430	Delete element
+1401401382647	Delete element
+1401401863419	Rename field '_currentUser'
+1401539148254	Rename local variable 'target'
+1401539158288	Rename local variable 'template'
+1401539609002	Rename type 'DynamicMailHelper'
+1401539632516	Rename package 'mamshops.requests.dynamicContent'
+1401539639602	Rename package 'mamshops.requests.dynamicHelper'
+1401539692723	Rename package 'mamshops.requests.dynamicGetter'
+1401539697592	Rename package 'mamshops.requests.Setter'
+1401539703642	Move compilation unit
+1401539708459	Move compilation unit
+1401539721436	Move compilation unit
+1401539734829	Move compilation unit
+1401539739537	Move compilation unit
+1401539744120	Move compilation unit
+1401539756598	Rename type 'UserExpectedStatus'
+1401539794431	Rename package 'mamshops.requests.httpRequest'
+1401539798805	Move compilation unit
+1401539805420	Delete element
+1401539814502	Move compilation unit
+1401539920319	Rename package 'mamshops.requests.action'
+1401539925167	Rename package 'mamshops.requests.velocity'
+1401539977433	Move compilation unit
+1401539982903	Move compilation unit
+1401539987420	Delete element
+1401540507408	Rename type 'UserStatus'

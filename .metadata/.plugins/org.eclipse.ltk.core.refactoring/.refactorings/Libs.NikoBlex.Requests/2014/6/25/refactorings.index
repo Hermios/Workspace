@@ -1,0 +1,32 @@
+1403028183953	Delete element
+1403254336603	Move compilation unit
+1403254482299	Move compilation unit
+1403254499031	Delete element
+1403257602162	Rename type 'AbstractGetterFactory'
+1403257914973	Move compilation unit
+1403258106821	Rename type 'GetterFactory'
+1403258465250	Rename type 'AbstractRequest'
+1403258512828	Rename type 'GetSetFactory'
+1403258531055	Move compilation unit
+1403259173208	Rename local variable 'getter'
+1403259180690	Rename local variable 'getter'
+1403261557688	Rename type 'RequestFactory'
+1403261877339	Rename package 'mamshops.requests'
+1403261884123	Move compilation unit
+1403261887352	Move compilation unit
+1403263153260	Delete element
+1403263397160	Rename local variable 'actionHelper'
+1403372808270	Rename method 'requestUserStatus'
+1403372992265	Move compilation unit
+1403373044634	Move file
+1403373431336	Move package
+1403373439061	Move package
+1403373522282	Rename package 'mamshops.generic.getset'
+1403373585015	Rename package 'mamshops.request.getset'
+1403373683609	Move package
+1403375159502	Rename local variable 'userStatus'
+1403378449092	Move compilation unit
+1403379149929	Copy package
+1403379280887	Delete element
+1403379284395	Delete element
+1403379286688	Delete element

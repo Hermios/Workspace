@@ -1,0 +1,18 @@
+1400540762702	Rename type 'DatabaseManager'
+1400540770910	Rename type 'GraphDatabaseManager'
+1400540791166	Rename type 'RealtionDatabase'
+1400542038718	Rename local variable 'con'
+1400676631029	Delete element
+1400691008113	Delete element
+1400691017509	Copy compilation unit
+1400692819685	Rename resource 'businessmodels.properties'
+1400694184686	Rename package 'mamshops.relationsips.types'
+1400694189604	Rename package 'mamshops.relationsip.types'
+1400694203954	Rename package 'mamshops.relationship.types'
+1400694210630	Rename package 'mamshops.relationship.propertykeys'
+1400694264688	Rename type 'UserRelationshipKey'
+1400694270290	Rename type 'ShopRelationshipKey'
+1400694273932	Rename type 'LocalizationRelationshipKey'
+1400694278274	Rename type 'FilterRelationshipKey'
+1400694283183	Rename type 'ContainerRelationshipKey'
+1400695844458	Delete element

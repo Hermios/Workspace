@@ -1,0 +1,90 @@
+package mamshops.businessmodels.user;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.libs.annotations.HelperAnnotation;
+import mamshops.libs.businessmodels.NodeLabel;
+import mamshops.libs.businessmodels.UserNode;
+import mamshops.libs.businessmodels.propertykeys.UserPropertyKey;
+import mamshops.libs.httpRequests.RequestParameterProperty;
+import mamshops.libs.relationships.RelationshipType;
+import mamshops.libs.velocity.IRequestVelocity;
+import mamshops.relationships.Friendship;
+
+public class UserVelocity implements IRequestVelocity{
+	UserNode _currentUser;
+	
+	public UserVelocity()	
+	{ 
+		
+	}
+	
+	@Override
+	public void setRequest(HttpServletRequest request) throws Exception {	
+		Long shopId=(Long)request.getSession().getAttribute(NodeLabel.user.toString());
+		if(shopId!=null)
+			_currentUser=new UserNode(shopId);		
+	}
+	
+	public UserVelocity(Long nodeId)
+	{
+		_currentUser=new UserNode(nodeId);
+	}
+				
+	@HelperAnnotation(description="return the first name of the user")
+	public String getName()
+	{		
+		return get(UserPropertyKey.name).toString();
+	}
+	
+	@HelperAnnotation(description="return the language of the user")
+	public String getLocale()
+	{
+		return get(UserPropertyKey.language).toString();
+	}
+		
+	@HelperAnnotation(description="return the nationality of the user")
+	public String getNationality()
+	{
+		return get(UserPropertyKey.nationality).toString();
+	}
+	
+	@HelperAnnotation(description="return the current country where the user lives")
+	public String getCountry()
+	{
+		return get(UserPropertyKey.country).toString();
+	}
+		
+	@HelperAnnotation(description="return true if the user choose a public status")
+	public boolean isPublic()
+	{
+		return (boolean)get(UserPropertyKey.isPublic);
+	}
+	
+	@HelperAnnotation(description="return true is the user is a male, false if she is a female, and null if it was not specified")
+	public boolean isMale()
+	{
+		return (boolean)get(UserPropertyKey.sex);
+	}
+	
+	@HelperAnnotation(description="return the city where the user lives")
+	public String getTown()
+	{
+		return get(UserPropertyKey.town).toString();
+	}
+	
+	@HelperAnnotation(description="saves in the session the relation between the current user and the friend defined (id)",inputParameter={RequestParameterProperty.ATTRIBUTE_PARAMETER_ID})
+	public Long getFriendship(Long targetNode)
+	{				
+		return Friendship.get(_currentUser.getId(), targetNode,RelationshipType.friendship);		
+	}	
+	
+	private Object get(UserPropertyKey key)
+	{
+		if(_currentUser==null)
+			return null;
+		return _currentUser.getProperty(key);
+	}
+
+	
+}

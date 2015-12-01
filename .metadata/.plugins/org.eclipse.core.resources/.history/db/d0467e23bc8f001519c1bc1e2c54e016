@@ -1,0 +1,27 @@
+package nikoBlex.requests.getset;
+
+import java.util.List;
+
+import nikoBlex.requests.getset.AbstractNodeGetSet;
+import nikoBlex.requests.getset.AbstractSetter;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+import nikoBlex.usecases.user.IUserAuthorizationLevel;
+import nikoBlex.businessmodels.database.GraphNode;
+import nikoBlex.businessmodels.database.GraphRelationship;
+import nikoBlex.businessmodels.enums.INodePropertyKey;
+import nikoBlex.businessmodels.relationships.types.IGraphRelationshipType;
+
+public abstract class AbstractSetter extends AbstractGetSet{	
+		
+	
+	protected AbstractSetter(IUserAuthorizationLevel methodAccess,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(methodAccess, sessionAttributeKey);
+	}
+
+	public static <T extends AbstractSetter> T SetterFactory(GraphNode node,Class<T> setter) throws InstantiationException, IllegalAccessException
+	{
+		T instance=setter.newInstance();
+		return instance;
+	}
+}

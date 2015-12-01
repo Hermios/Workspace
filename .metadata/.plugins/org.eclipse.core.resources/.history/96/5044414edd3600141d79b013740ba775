@@ -1,0 +1,57 @@
+package mamshops.resources.dynamicimages;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.util.HashMap;
+import java.util.regex.Pattern;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang.RandomStringUtils;
+
+import mamshops.tools.entries.EnumPropertieKeys;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.PathConstructor;
+
+public class ExternalWebsiteHelper {
+	private static HashMap<String,String> _mapWebsitesCodes=new HashMap<>();
+	
+	
+	private String ImageHandler(String webSiteRoot,String pictureUrl) throws IOException
+	{
+		String picturePath=PathConstructor.getPath(_mapWebsitesCodes.get(webSiteRoot),pictureUrl);		
+		File pictureFile=new File(PropertiesManager.getString(EnumPropertieKeys.TEMP_DIRECTORY),picturePath);
+		if(pictureFile.exists())
+			return picturePath;
+		if(!pictureFile.getParentFile().exists())
+			pictureFile.getParentFile().mkdirs();
+		URL pictureFullUrl = new URL(PathConstructor.getURL(webSiteRoot,pictureUrl));
+		FileUtils.copyURLToFile(pictureFullUrl, pictureFile);
+		return picturePath;
+	}
+	
+	public String ScriptHandler(String webSiteRoot, String scriptUrl,boolean mainPage)
+	{
+		if(mainPage && _mapWebsitesCodes.containsKey(webSiteRoot))
+			return _mapWebsitesCodes.get(webSiteRoot);
+		HttpURLConnection.setFollowRedirects(true);	
+		HttpURLConnection huc=null;
+		BufferedReader br=null;
+		StringBuffer sb=new StringBuffer();
+		try {
+			URL url = new URL(strUrl);
+		HttpURLConnection.setFollowRedirects(true);			
+			huc = (HttpURLConnection) url.openConnection();
+		
+		huc = (HttpURLConnection) url.openConnection();
+	huc.setUseCaches(false);
+	huc.setAllowUserInteraction(false);
+	strUrl=huc.getURL().toString();		
+	Pattern p=Pattern.compile("=\"\\/(\\w)");
+	br=new BufferedReader(new InputStreamReader(huc.getInputStream()));
+	String readedLine;
+	}
+}

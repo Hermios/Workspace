@@ -1,0 +1,95 @@
+package mamshops.admin.servlets;
+
+import java.util.ResourceBundle;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.apache.catalina.Server;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.core.StandardEngine;
+
+import mamshops.libs.entries.PropertiesLoader;
+import mamshops.libs.entries.PropertiesManager;
+import mamshops.libs.serviceLocators.IServiceLocator;
+import mamshops.libs.serviceLocators.ServiceLocator;
+
+public class ApplicationServletContextListener implements ServletContextListener{
+	private static final String EXCEPTION_STOP_SERVER="server.exception.interrupt";
+	
+	@Override
+	public void contextDestroyed(ServletContextEvent servletContextEvent) {
+		for(IServiceLocator serviceLocator:ServiceLocator.getAllServices())
+		{
+			serviceLocator.EndServiceLocator();
+			System.out.println(serviceLocator.getClass().getName() + " is closed");
+		}
+		System.out.println("Server closed");
+		
+		ServiceLocator.clear();
+		System.out.println("Clear ressources");
+		ResourceBundle.clearCache();		
+		System.out.println("ressources cleared");		  
+	}
+
+	@Override
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		System.out.println("Starting context admin");
+		String root=servletContextEvent.getServletContext().getRealPath("");		
+		System.out.println("Load properties");
+		try {
+			PropertiesLoader pl=new PropertiesLoader(root);
+			PropertiesManager.loadProperties(pl.getAllProperties(),pl.getPropertiesPath());
+		} catch (Exception e2) {
+			e2.printStackTrace();
+			System.out.println("ERROR WHILE LOADING PROPERTIES");
+			return;
+		}
+		System.out.println("Properties loaded");
+				
+		boolean stopOnError=PropertiesManager.getProperty(EXCEPTION_STOP_SERVER).equals("true");
+		
+		System.out.println("Initialize Services");		
+		try {
+			ServiceLocator.init(stopOnError);
+		} catch (Exception e) {
+			System.out.println("ERROR WHILE INITIALIZING ServiceLocator");
+			e.printStackTrace();
+			if(stopOnError)
+			{
+				java.lang.System.exit(1); 
+				return;
+			}					
+		}
+		System.out.println("Services initialized");
+		
+		try
+		{
+		MBeanServer mBeanServer = MBeanServerFactory.findMBeanServer(null).get(0);
+        ObjectName name = new ObjectName("Catalina", "type", "Server");
+        Server server = (Server) mBeanServer.getAttribute(name, "managedResource");
+        StandardEngine engine = (StandardEngine) server.findService("Catalina").getContainer();
+        StandardContext mainContext = (StandardContext)engine.findChild(engine.getDefaultHost()).findChild("Main");
+        ServletContext remoteServletContext=mainContext.getServletContext();
+        ServletContext localServletContext=servletContextEvent.getServletContext();
+        String key="databaseManager";
+        localServletContext.setAttribute(key, remoteServletContext.getAttribute(key));
+        key="classesManager";
+        localServletContext.setAttribute(key, remoteServletContext.getAttribute(key));        
+		}catch(Exception e) {			
+			System.out.println("ERROR WHILE INITIALIZING attributes in servletContext");
+			e.printStackTrace();
+			if(stopOnError)
+			{
+				java.lang.System.exit(1); 
+				return;
+			}
+		}
+		System.out.println("Admin context started");
+	}
+
+}

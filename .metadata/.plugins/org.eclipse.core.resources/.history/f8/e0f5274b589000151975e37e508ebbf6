@@ -1,0 +1,22 @@
+package nikoBlex.requests.getset;
+
+import javax.servlet.http.HttpServletRequest;
+
+public class GetterSetterFactory {
+	public static <T extends IGetter> T constructGetter(Class<T extends IGetter> getset,HttpServletRequest request)
+	{
+		T instance;
+		try {
+			instance = getset.newInstance();
+			instance.initialize(request);
+			return instance;
+		} catch (InstantiationException e) {
+			e.printStackTrace();
+			return null;
+		} catch (IllegalAccessException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+}

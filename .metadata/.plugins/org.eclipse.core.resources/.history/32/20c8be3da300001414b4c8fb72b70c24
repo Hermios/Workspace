@@ -1,0 +1,143 @@
+package mamshops.user.setters;
+
+import java.util.HashMap;
+import java.util.Iterator;
+
+import org.apache.commons.lang.NullArgumentException;
+import org.apache.commons.lang.RandomStringUtils;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.enums.UserEnums.UserSex;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.propertykeys.relationships.FriendshipPropertyKey;
+import mamshops.businessmodels.relationships.types.UserRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.keys.RequestParameterKeys;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.requests.timeevent.TimeEventSetter;
+import mamshops.requests.tools.AdminTools;
+import mamshops.resources.dynamicimages.UserImageType;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.entries.PropertiesManager;
+
+public class UserSetter extends BasicUserSetter{	
+	
+	public UserSetter()
+	{
+		super(UserMethodAccess.user);
+	}
+	
+	public void setParameter(String parameter)
+	{
+		_parameter=parameter;
+	}
+	
+	@HelperAnnotation(description="set the nationality of the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public String setNationality()
+	{
+		return replaceRelation(UserRelationshipType.nationality);
+	}
+	
+	@HelperAnnotation(description="set the country where the current user lives",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public String setCountry()
+	{
+		return replaceRelation(UserRelationshipType.country);
+	}
+		
+	@HelperAnnotation(description="set true if the status of the current user is public, else false",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public String setStatus()
+	{
+		return setAttribute(UserPropertyKey.status);
+	}
+	
+	@HelperAnnotation(description="set true if current user wants newsletter",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public String setHasNewsletter()
+	{
+		return setAttribute(UserPropertyKey.hasNewsletter);
+	}
+	
+	@HelperAnnotation(description="set the city where the current user lives",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})	
+	public String setTown()
+	{
+		return replaceRelation(UserRelationshipType.town);
+	}
+		
+	@HelperAnnotation(description="set if the last visited page should be kept",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public String setKeepSelectedPage()
+	{
+		return setAttribute(UserPropertyKey.keepVisitedFrame);
+	}
+		
+	@HelperAnnotation(description="add a delivering country to the list of this user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public String addFriend()
+	{
+		return addRelation(UserRelationshipType.friend);
+	}
+	
+	@HelperAnnotation(description="add a delivering country to the list of this user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public String addDeliveringCountry()
+	{
+		return addRelation(UserRelationshipType.deliveringcountry);
+	}
+	
+	@HelperAnnotation(description="remove a delivering country from the list of this user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public String removeDeliveringCountry()
+	{
+		return deleteRelation(UserRelationshipType.deliveringcountry);
+	}
+
+	public String sendInvitation()
+	{
+		if(_parameter==null)
+			_parameter=(String)_session.getAttribute(SessionAttributeKeys.currentParameter.toString());
+		if(_parameter==null)
+			throw new NullArgumentException("sendInvitation-no parameter");
+		_parameter=_parameter.toLowerCase();
+		String password=RandomStringUtils.randomAlphanumeric(10);
+		if(!AdminTools.createUser(_parameter, password, _request.getLocale(),"",UserSex.undefined.toString(),"FR"))
+			return "error.user.exists";
+		HashMap<String, Object> addedProperties=new HashMap<>();		
+		addedProperties.put(PropertiesManager.getProperty(RequestParameterKeys.ATTRIBUTE_PASSWORD_ID), password);
+		try {
+			new MailSender(_request).sendMail(_currentNode.getProperty(UserPropertyKey.name).toString(), "FriendInvitation.htm", new String[]{_parameter},addedProperties);
+			_parameter=MamsNode.get(NodeLabel.user, UserPropertyKey.email, _parameter).getId().toString();
+			addFriend();
+			
+			return "info.user.sendinvitation";
+		} catch (Exception e) {
+			e.printStackTrace();
+			return "error.send.invitation";
+		}
+	}	
+
+	@HelperAnnotation(description="validate the current friendship",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void validate()
+	{
+		Long friendId=(Long)_session.getAttribute(SessionAttributeKeys.currentFriend.toString());
+		if(friendId==null)
+		{
+			friendId=Long.parseLong(_parameter);
+			if(friendId==null)
+				throw new NullArgumentException("friendId");
+		}
+		Iterator<MamsRelationship> iteratorRelationships=_currentNode.getRelationships(UserRelationshipType.friend, true, false).iterator();
+		boolean relFound=false;
+		MamsRelationship currentRelationship=null;
+		while(!relFound && iteratorRelationships.hasNext())
+		{
+			currentRelationship=iteratorRelationships.next();
+			relFound=currentRelationship.getOtherNode(_currentNode.getId()).getId().equals(friendId);
+		}
+		if(relFound)
+			currentRelationship.setProperty(FriendshipPropertyKey.validate, true);
+		MamsNode currentFriend=new MamsNode(friendId); 
+		String[] parameters=new String[]
+		{
+			currentFriend.getProperty(UserPropertyKey.firstname).toString(),
+			_currentNode.getProperty(UserPropertyKey.firstname).toString()
+		};
+		TimeEventSetter.add(_currentNode, "timeevent.friendship.validate", parameters, UserImageType.portrait,friendId);
+	}	
+}

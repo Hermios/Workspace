@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<web-app xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://java.sun.com/xml/ns/javaee" xmlns:web="http://java.sun.com/xml/ns/javaee" xsi:schemaLocation="http://java.sun.com/xml/ns/javaee http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" id="WebApp_ID" version="2.5">
+  <display-name>Mamshops.Main</display-name>
+  <listener>
+    <listener-class>mamshops.servlet.ApplicationServletContextListener</listener-class>
+  </listener>
+  <servlet>
+    <servlet-name>ServletFilter</servlet-name>
+    <servlet-class>mamshops.servlet.ServletFilter</servlet-class>
+  </servlet>
+  <servlet-mapping>
+    <servlet-name>ServletFilter</servlet-name>
+    <url-pattern>/*</url-pattern>
+  </servlet-mapping>
+  <security-constraint>  
+        <web-resource-collection>  
+                <web-resource-name>Entire Application</web-resource-name>  
+                <url-pattern>/</url-pattern>  
+        </web-resource-collection>  
+
+        <auth-constraint>  
+                <role-name>test</role-name>  
+        </auth-constraint>  
+        <user-data-constraint>
+			<transport-guarantee>CONFIDENTIAL</transport-guarantee>
+		</user-data-constraint>
+   </security-constraint>  
+
+   <login-config>  
+           <auth-method>BASIC</auth-method>  
+           <realm-name>Mamshops Test Manager</realm-name>  
+   </login-config>  
+
+   <security-role>                                                                                   
+           <description>                                                                             
+                   Test role required                            
+           </description>                                                                            
+           <role-name>test</role-name>                                                               
+   </security-role>        
+</web-app>

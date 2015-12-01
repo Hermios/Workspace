@@ -1,0 +1,48 @@
+1397499860456	Rename field 'staticContextParameters'
+1397499911736	Rename field 'mapStaticVelocity'
+1397499914999	Rename field 'mapDynamicVelocity'
+1397500077905	Delete element
+1397500085526	Move compilation unit
+1397500088475	Delete element
+1397500353266	Rename enum constant 'staticWebContent'
+1397502985717	Rename package 'mamshops.requests.helpers'
+1397502998298	Move compilation unit
+1397503006870	Move compilation unit
+1397503039511	Move compilation unit
+1397503101861	Rename type 'IActionHelper'
+1397503107908	Move compilation unit
+1397503117399	Rename package 'mamshops.libs.actionRequests'
+1397503274040	Delete element
+1397503288119	Move compilation unit
+1397503299804	Rename package 'mamshops.libs.action'
+1397503312586	Move compilation unit
+1397503399081	Rename method 'getUrlWithParam'
+1397503608416	Rename type 'StaticContentHelper'
+1397503690311	Move compilation unit
+1397505950836	Move package
+1397506990628	Move package
+1397508932871	Move package
+1397508936991	Move package
+1397508960254	Move package
+1397509084121	Move package
+1397509089696	Move package
+1397509200737	Move package
+1397509846158	Rename package 'mamshops.libs.requests.action'
+1397509852668	Move package
+1397510023902	Move package
+1397510651041	Delete element
+1397510671832	Delete element
+1397510695088	Rename package 'mamshops.libs.servletContexts'
+1397511076321	Move package
+1397511271085	Rename type 'RequestParameterProperty'
+1397511303974	Move compilation unit
+1397511487248	Move package
+1397511513573	Rename package 'mamshops.libs.velocity'
+1397511528106	Rename package 'mamshops.libs.session'
+1397511558088	Rename package 'mamshops.libs.requests'
+1397511563525	Rename package 'mamshops.requests.servletContexts'
+1397511588044	Rename package 'mamshops.libs.httpRequests'
+1397514289709	Rename type 'IStaticVelocity'
+1397824321577	Rename type 'ResponseDataWriter'
+1397824929746	Rename type 'DynamicImageHelper'
+1397826192398	Rename method 'WriteDataInResponse'

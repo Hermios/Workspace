@@ -1,0 +1,16 @@
+package mamshops.admin.setters;
+
+import mamshops.businessmodels.propertykeys.node.INodePropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractSetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+
+public class AdminMethods extends AbstractSetter{
+
+	public AdminMethods() {
+		super(UserMethodAccess.admin, expectedNodeLabel, refKey, sessionAttributeKey);
+		// TODO Auto-generated constructor stub
+	}
+	public 
+}

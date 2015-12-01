@@ -1,0 +1,213 @@
+package mamshops.user.getters;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.propertykeys.node.LocalizationPropertyKey;
+import mamshops.businessmodels.propertykeys.node.NodeLabel;
+import mamshops.businessmodels.propertykeys.node.ShopPropertyKey;
+import mamshops.businessmodels.propertykeys.node.TimeEventPropertyKey;
+import mamshops.businessmodels.propertykeys.node.UserPropertyKey;
+import mamshops.businessmodels.relationships.types.CommentRelationshipType;
+import mamshops.businessmodels.relationships.types.IMamsRelationshipType;
+import mamshops.businessmodels.relationships.types.TimeEventRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.generic.getter.ResourcesBundlesPage;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.resources.dynamicimages.DynamicImageHelper;
+import mamshops.resources.dynamicimages.IImageType;
+import mamshops.resources.dynamicimages.ShopImageType;
+import mamshops.resources.dynamicimages.UserImageType;
+import mamshops.tools.entries.PropertiesManager;
+
+public class TimeEventGetter extends AbstractGetter {
+	private final static String FRIEND_DEFAULT_FRAME="webframe.default.friend";
+	private final static String SHOP_DEFAULT_FRAME="webframe.default.shop";
+	private UserGetter _userGetter;
+	
+	public TimeEventGetter() {
+		super(UserMethodAccess.user, NodeLabel.timeevent, null, null);
+	}
+	
+	private Iterator<TimeEventGetter> getCurrentUserTimeEvents()
+	{
+		return getFriendTimeEvents(construct(FriendGetter.class,_userGetter.getNode()));
+	}
+		
+	private Iterator<TimeEventGetter> getFriendTimeEvents(FriendGetter friendGetter)
+	{
+		List<TimeEventGetter> result=new ArrayList<>();
+		TimeEventGetter lastTimeEvent=friendGetter.getLastTimeEvent();
+		if(lastTimeEvent!=null)
+		{
+			result.add(lastTimeEvent);
+			result.addAll(lastTimeEvent.getRecursiveTimeEvent());
+		}
+		return result.iterator();
+	}
+	
+	private List<TimeEventGetter> getRecursiveTimeEvent()
+	{
+		List<TimeEventGetter> result=new ArrayList<>();
+		List<MamsRelationship> listRels=_currentNode.getRelationships(TimeEventRelationshipType.nexttimeevent,true,false);
+		if(!listRels.isEmpty())
+		{
+			TimeEventGetter nextTimeEvent=construct(TimeEventGetter.class,listRels.get(0).getOtherNode(_currentNode.getId()));
+			result.add(nextTimeEvent);
+			result.addAll(nextTimeEvent.getRecursiveTimeEvent());
+		}
+		return result;
+	}
+	
+	private boolean addToList(TimeEventGetter timeEvent,List<Long> listDoublons,Long doublon)
+	{
+		if(timeEvent.isToCurrentUser() || doublon==null)
+			return true;
+		if(listDoublons.contains(timeEvent.getId()))
+			return false;
+		TimeEventGetter doublonTimeEvent=construct(TimeEventGetter.class,new MamsNode(doublon));
+		return !doublonTimeEvent.isToCurrentUser();
+	}
+	
+	private Long getDoublon()
+	{
+		String doublon=getAttribute(TimeEventPropertyKey.doublon, false);
+		return doublon.isEmpty()?null:Long.parseLong(doublon);
+	}
+	
+	private boolean isToCurrentUser()
+	{
+		return _userGetter.getId().toString().equals(getAttribute(TimeEventPropertyKey.user, false));
+	}
+	
+	private String getObjectString(MamsNode node)
+	{
+		if(node.getLabel()==NodeLabel.user)
+			return "<a href=/?currentFrame="+PropertiesManager.getProperty(FRIEND_DEFAULT_FRAME)+"&currentFriend="+node.getId()+">"+node.getProperty(UserPropertyKey.firstname).toString()+"</a>";
+		if(node.getLabel()==NodeLabel.shop)
+			return "<a href=/?currentFrame="+PropertiesManager.getProperty(SHOP_DEFAULT_FRAME)+"&currentShop="+node.getId()+">"+node.getProperty(ShopPropertyKey.name).toString()+"</a>";
+		if(node.getLabel()==NodeLabel.country)
+			return construct(ResourcesBundlesPage.class).get("country.name."+node.getProperty(LocalizationPropertyKey.code));
+		return "";
+	}
+
+	public List<TimeEventGetter> getSortedAllTimeEvents(boolean userOnly)
+	{
+		List<TimeEventGetter> result=new ArrayList<>();
+		List<Iterator<TimeEventGetter>> listAllTimeEvents=new ArrayList<>();
+		
+		//Load the list of timeevents for the user
+		listAllTimeEvents.add(getCurrentUserTimeEvents());
+		
+		//Load the list of timeevents for all friends
+		if(!userOnly)
+		{
+			for(FriendGetter friendGetter:_userGetter.getFriends(null,false))
+				listAllTimeEvents.add(getFriendTimeEvents(friendGetter));
+		}
+		
+		//Construct the global map TimeEvent / List of timeevents
+		HashMap<TimeEventGetter,Iterator<TimeEventGetter>> currentFirstEventsMap=new HashMap<>();
+		for(Iterator<TimeEventGetter> nodeEnum:listAllTimeEvents)
+		{
+			if(nodeEnum.hasNext())
+				currentFirstEventsMap.put(nodeEnum.next(),nodeEnum);
+		}
+		
+		List<Long> listDoublons=new ArrayList<>();
+		//Loop while there are still events
+		while(!currentFirstEventsMap.isEmpty())
+		{
+			TimeEventGetter lastTimeEvent=currentFirstEventsMap.keySet().iterator().next();
+			//find the newest event for all friends+user
+			for(TimeEventGetter timeEventGetter:currentFirstEventsMap.keySet())
+			{
+				if(lastTimeEvent.getCalendar().before(timeEventGetter.getCalendar()))
+					lastTimeEvent=timeEventGetter;
+			}
+			
+			//add result in sorted list, only if it doesn't belong to list of doublons. If doublon, Priority on the one of the current user
+			Long doublon=lastTimeEvent.getDoublon();
+			if(addToList(lastTimeEvent, listDoublons, doublon))
+			{
+				result.add(lastTimeEvent);
+				if(doublon!=null)
+					listDoublons.add(doublon);
+			}
+			
+			//Find the corresponding list to the chosen TimEvent
+			Iterator<TimeEventGetter> lastTimeEventEnum=currentFirstEventsMap.get(lastTimeEvent);
+			
+			//Remove the sorted timeevent in the global map
+			currentFirstEventsMap.remove(lastTimeEvent);
+			
+			//iterates the list found
+			if(lastTimeEventEnum.hasNext())
+				currentFirstEventsMap.put(lastTimeEventEnum.next(), lastTimeEventEnum);			
+		}
+		return result;
+	}
+	
+	public String getUserPicture(boolean resize,boolean cut,Integer width,Integer height)
+	{
+		return getUser().getPortrait(resize, cut, width, height);
+	}
+	
+	public String getPicture(boolean resize,boolean cut,Integer width,Integer height)
+	{		
+		MamsNode pictureNode=_currentNode.getNodes(TimeEventRelationshipType.picture,1).get(0);
+		NodeLabel label=pictureNode.getLabel();
+		IImageType imageType=null;
+		if(label.equals(NodeLabel.user))
+			imageType=UserImageType.portrait;
+		else if(label.equals(NodeLabel.shop))
+			imageType=ShopImageType.screenshot;
+		else return "";
+		try {			
+			return DynamicImageHelper.getChangedImage(pictureNode.getId(),imageType,resize,cut,null,null, width, height);
+		} catch (Exception e) {			
+			e.printStackTrace();
+			return null;
+		}
+	}
+	
+	private UserGetter getUser()
+	{
+		Long id=Long.parseLong(getAttribute(TimeEventPropertyKey.user,true));
+		return construct(UserGetter.class,new MamsNode(id));
+	}
+	
+	public String getDescription()
+	{
+		String resourceBundleKey="timeevent."+(isToCurrentUser()?"user":"friend")+"."+getAttribute(TimeEventPropertyKey.resourceBundleKey, true);
+		List<String> allParameters=new ArrayList<>();
+		allParameters.add(getUser().getFirstName());
+		String[] parameters=(String[])_currentNode.getProperty(TimeEventPropertyKey.parameters);
+		if(parameters!=null && parameters.length>0)
+			allParameters.addAll(Arrays.asList(parameters));
+		List<IMamsRelationshipType> listRels=new ArrayList<>();		
+		listRels.add(TimeEventRelationshipType.reference);
+		for(MamsNode node:_currentNode.getNodes(listRels,1))
+			allParameters.add(getObjectString(node));
+		return construct(ResourcesBundlesPage.class).get(resourceBundleKey, allParameters);
+	}
+	
+	@Override
+	protected void initialize(HttpServletRequest request) {
+		super.initialize(request);
+		_userGetter=construct(UserGetter.class);
+	}
+
+	public List<CommentGetter> getCommentGetters()
+	{
+		return getRelatedNode(CommentGetter.class,CommentRelationshipType.target).getPreviousComments();
+	}
+
+}

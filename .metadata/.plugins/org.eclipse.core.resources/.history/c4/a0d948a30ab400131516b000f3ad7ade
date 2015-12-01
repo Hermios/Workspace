@@ -1,0 +1,91 @@
+package mamshops.admin.tools;
+
+import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.interfaces.IRequestHelper;
+import mamshops.properties.PropertiesManager;
+
+public class MethodsLister implements IToolsHttpRequest{
+	List<MethodDescription> _listRequestMethods=new ArrayList<>();
+	List<MethodDescription> _listActionMethods=new ArrayList<>();
+	List<MethodDescription> _listStaticVelocity=new ArrayList<>();
+	List<PropertyDescription> _listProperties=new ArrayList<>();
+	public MethodsLister()
+	{
+		if(!PropertiesManager.getProperty("mamshops.debugMode").equals("true"))
+			return;
+		//for(Class<IRequestHelper> requestHelperClass:dataLoader.getClasses(IRequestHelper.class))
+		{
+//			IRequestHelper requestHelper=requestHelperClass.newInstance();
+//			for(Method currentMethod:requestHelper.getClass().getDeclaredMethods())
+//			{
+//				if(currentMethod.isAnnotationPresent(HelperAnnotation.class))				
+//					_listRequestMethods.add(new MethodDescription(currentMethod));				
+//			}
+//		}
+//		
+//		Collections.sort(_listRequestMethods,new MethodsComparator());
+//		
+//		for(Class<IActionHelper> actionHelperClass:dataLoader.getClasses(IActionHelper.class))
+//		{
+//			IActionHelper actionHelper=actionHelperClass.newInstance();
+//			for(Method currentMethod:actionHelper.getClass().getDeclaredMethods())
+//			{
+//				if(currentMethod.isAnnotationPresent(HelperAnnotation.class))				
+//					_listActionMethods.add(new MethodDescription(currentMethod));				
+//			}
+//		}
+//		
+//		Collections.sort(_listActionMethods,new MethodsComparator());
+//
+//		for(Object staticVelocity:listStaticVelocities)
+//		{
+//			for(Method currentMethod:staticVelocity.getClass().getMethods())
+//			{
+//				if(currentMethod.isAnnotationPresent(VelocityAnnotation.class))				
+//					_listStaticVelocity.add(new MethodDescription(currentMethod,staticVelocity.getClass()));
+//			}
+//		}
+//		
+//		Collections.sort(_listStaticVelocity,new MethodsComparator());
+//
+//		for(Map.Entry<Object, Object> entry:PropertiesManager.getAllProperties().entrySet())
+			_listProperties.add(new PropertyDescription(entry));
+//		
+		Collections.sort(_listProperties,new PropertiesComparator());
+
+	}	
+
+	public List<MethodDescription> getRequestHelpers()
+	{
+		return _listRequestMethods;
+	}
+	
+	public List<MethodDescription> getActionHelpers()
+	{
+		return _listActionMethods;
+	}
+	
+	public List<MethodDescription> getStaticVelocities()
+	{
+		return _listStaticVelocity;
+	}
+		
+	public List<PropertyDescription> getProperties()
+	{
+		return _listProperties;
+	}
+
+	@Override
+	public void Initialise(HttpServletRequest request) {
+		// TODO Auto-generated method stub
+		
+	}
+}

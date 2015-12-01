@@ -1,0 +1,50 @@
+package nikoBlex.requests.getset;
+
+import java.util.List;
+
+import nikoBlex.requests.getset.AbstractNodeGetSet;
+import nikoBlex.requests.getset.AbstractSetter;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+import nikoBlex.usecases.user.IUserAuthorizationLevel;
+import nikoBlex.businessmodels.database.GraphNode;
+import nikoBlex.businessmodels.database.GraphRelationship;
+import nikoBlex.businessmodels.enums.INodePropertyKey;
+import nikoBlex.businessmodels.relationships.types.IGraphRelationshipType;
+
+public abstract class AbstractSetter extends AbstractGetSet{	
+		
+	
+	protected AbstractSetter(IUserAuthorizationLevel methodAccess,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(methodAccess, sessionAttributeKey);
+	}
+
+	public static <T extends AbstractSetter> T SetterFactory(GraphNode node,Class<T> setter) throws InstantiationException, IllegalAccessException
+	{
+		T instance=setter.newInstance();
+		return instance;
+	}
+	
+	protected String replaceRelation(IGraphRelationshipType relType)
+	{
+		List<GraphRelationship> listRels=_currentNode.getRelationships(relType, true, true);
+		if(!listRels.isEmpty())			
+			listRels.get(0).remove();
+		return addRelation(relType).isEmpty() && _currentNode.getRelationships(relType, true, true).size()==1?"":"error.relation.changed";
+		
+	}
+	
+	protected String deleteRelation(IGraphRelationshipType relType)
+	{
+		Long targetId=Long.parseLong(_parameter);
+		GraphNode targetNode=new GraphNode(targetId);
+		_currentNode.getRelationships(targetNode, relType).get(0).remove();
+		return _currentNode.getRelationships(targetNode, relType)==null?"":"error.relation.deleted";
+	}
+
+	public boolean equals(AbstractSetter<NodeLabel> getter)
+	{
+		return getter.getId()==getId();
+	}
+
+}

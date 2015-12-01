@@ -1,0 +1,32 @@
+1400489048951	Delete element
+1400489307955	Delete element
+1400489318062	Delete element
+1400489326571	Delete element
+1400489328505	Delete element
+1400489353937	Delete element
+1400489359333	Delete element
+1400492336414	Rename type 'UserGetter'
+1400492346634	Rename type 'UserSetter'
+1400494460696	Rename type 'GenericUserGetter'
+1400494475558	Rename type 'NotConnectedUserGetter'
+1400494502939	Rename type 'UserLoader'
+1400495756657	Rename type 'UserRequestUri'
+1400586162664	Rename package 'mamshops.node.getters'
+1400586168279	Rename package 'mamshops.node.setters'
+1400586307027	Delete element
+1400586318726	Delete element
+1400586334336	Rename package 'mamshops.servlet'
+1400586380877	Delete element
+1400586423801	Rename package 'mamshops.users.friendships'
+1400586482206	Rename package 'mamshops.main.servlet'
+1400586560075	Delete element
+1400586563583	Rename type 'AbstractApplicationServletContextListener'
+1400587024553	Delete element
+1400587524376	Rename local variable 'selectedContainer'
+1400588032302	Rename type 'UserSetter'
+1400605377913	Delete element
+1400679600314	Move file
+1400682981383	Delete element
+1400712053192	Delete element
+1400712076711	Delete element
+1400712079944	Delete element

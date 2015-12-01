@@ -1,0 +1,20 @@
+package nikoBlex.usecases.user;
+
+import nikoBlex.businessmodels.enums.INodeLabel;
+import nikoBlex.businessmodels.enums.INodePropertyKey;
+import nikoBlex.requests.getset.AbstractGetter;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+
+public abstract class AbstractUserGetter extends AbstractGetter{
+
+	public AbstractUserGetter(IUserAuthorizationLevel methodAccess,
+			INodeLabel expectedNodeLabel, INodePropertyKey refKey,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(methodAccess, expectedNodeLabel, refKey, sessionAttributeKey);
+		// TODO Auto-generated constructor stub
+	}
+
+	public abstract int getUserAuthorizationLevel();
+	
+	public abstract String getPortrait(boolean resize,boolean cut,Integer width,Integer height);
+}

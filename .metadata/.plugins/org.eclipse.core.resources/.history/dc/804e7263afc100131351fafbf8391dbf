@@ -1,0 +1,56 @@
+package mamshops.libs.httpRequests;
+
+import java.io.IOException;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import mamshops.libs.annotations.VelocityAnnotation;
+import mamshops.libs.entries.PropertiesManager;
+import mamshops.libs.utils.PathConstructor;
+import mamshops.libs.velocity.IStaticVelocity;
+
+public abstract class AbstractHelper implements IStaticVelocity{
+	private final static String WEBCONTENT_ALIAS="webcontent.path.alias";
+	protected ServletContext _context;
+	protected String _root;	
+	public AbstractHelper(String propertyLocalDirectory)
+	{
+		_root="/"+PropertiesManager.getProperty(propertyLocalDirectory);		
+	}
+		
+	public void doGet(HttpServletRequest request, HttpServletResponse response,String uri) throws IOException,ServletException
+	{		
+		String[] paths=new String[]{
+				PropertiesManager.getProperty(WEBCONTENT_ALIAS),
+				uri
+		};	
+		RequestDispatcher dispatcher=request.getRequestDispatcher(PathConstructor.getURL(paths));
+		dispatcher.forward(request, response);
+	}
+	
+	@VelocityAnnotation(description="Method to get the URL of the object")
+	public String getURL(String fileName)
+	{			
+		String[] paths=new String[]{
+				"",
+				_context.getContextPath(),
+				_root,
+				fileName
+		};
+		return PathConstructor.getURL(paths);		
+	}	
+	
+	public String getRoot()
+	{
+		return _root;
+	}	
+	
+	@Override
+	public void init(ServletContext context) {
+		_context=context;
+	}
+}

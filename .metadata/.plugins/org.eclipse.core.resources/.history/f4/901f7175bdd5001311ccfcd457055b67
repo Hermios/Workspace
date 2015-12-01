@@ -1,0 +1,119 @@
+package mamshops.businessmodels.tools;
+
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+
+import javax.imageio.ImageIO;
+
+import mamshops.businessmodels.database.DatabaseManager;
+import mamshops.businessmodels.node.NodeLabel;
+import mamshops.businessmodels.propertykey.GenericPropertyKey;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.utils.GenericFunctions;
+import mamshops.tools.utils.PathConstructor;
+
+import com.mortennobel.imagescaling.experimental.ImprovedMultistepRescaleOp;
+
+public class DynamicImageManager {
+	private final static String DYNAMIC_IMAGES_ROOT="dynamic.images.root";
+	private final static String DYNAMIC_IMAGES_TEMPLATE="dynamic.images.template";
+	private final static String DYNAMIC_IMAGES_RESIZED="dynamic.images.resized";
+	private final static String DYNAMIC_IMAGES_SUBIMAGES="dynamic.images.subimages";
+	
+	private BufferedImage _bufferedImage;
+	private String _extension;
+	private Long _id;
+	private String _nodeRoot;
+	private String _nodeLabel;
+	public DynamicImageManager(Long id,NodeLabel nodeLabel,String category) throws IOException
+	{		
+		_id=id;
+		_nodeLabel=nodeLabel.toString();
+		_nodeRoot=PathConstructor.getPath(new String[]{nodeLabel.toString(),category});
+		_extension=(String) DatabaseManager.getNodeProperty(id, GenericPropertyKey.imageExtension);
+		File file=new File(PathConstructor.getPath(new String[]{getTemplateDir(),_nodeRoot}),_id+"."+_extension);
+		Image image=ImageIO.read(file);
+		_bufferedImage=new BufferedImage(image.getWidth(null), image.getHeight(null), BufferedImage.TYPE_INT_ARGB);
+		Graphics2D graph2D=_bufferedImage.createGraphics();
+		graph2D.drawImage(image, 0, 0, null);
+		graph2D.dispose();
+	}
+	
+	public void RemoveImagesFromId()
+	{
+		
+	}
+	
+	private void RemoveImagesInDir(String rootPropertyKey)
+	{
+		String[] dirPaths=new String[]
+		{
+			getRoot(),
+			PropertiesManager.getProperty(rootPropertyKey),
+			_nodeLabel
+		};
+		File mainParentDir=new File(PathConstructor.getPath(dirPaths));
+		if(!mainParentDir.exists())
+			return;
+		for(String fileDirPath:mainParentDir.list())
+		{
+			File file=new File(fileDirPath,_id+"."+_extension)
+		}
+			
+			
+	}
+	public File resize(int width, int height) throws IOException 
+	{
+		String[] path=new String[]
+		{
+				getRoot(),
+				PropertiesManager.getProperty(DYNAMIC_IMAGES_RESIZED),
+				_nodeRoot,
+				width+"x"+height
+		};
+		File resizedImageFile=new File(PathConstructor.getPath(path),_id+"."+_extension);
+		if(resizedImageFile.exists())
+			return resizedImageFile;
+		ImprovedMultistepRescaleOp resampleOp = new ImprovedMultistepRescaleOp (width, height);	    
+	    BufferedImage bi=resampleOp.filter(_bufferedImage, null);
+	    saveImage(resizedImageFile, bi);
+	    return resizedImageFile;
+	}
+	
+	public File setSubImage(String subImagePath,int x,int y, int width, int height) throws IOException
+	{
+		String[] path=new String[]
+		{
+				getRoot(),
+				PropertiesManager.getProperty(DYNAMIC_IMAGES_SUBIMAGES),
+				_nodeRoot,
+				x+"_"+y+"_"+width+"_"+height
+		};
+		File subImageFile=new File(PathConstructor.getPath(path),_id+"."+_extension);
+		if(subImageFile.exists())
+			return subImageFile;
+		BufferedImage bi=_bufferedImage.getSubimage(x,y, width, height);
+		saveImage(subImageFile, bi);
+		return subImageFile;
+	}
+	
+	private void saveImage(File file,BufferedImage bi) throws IOException
+	{
+	    ImageIO.write(bi, GenericFunctions.getFileExtension(_extension), file);
+	}
+	
+	public static String getRoot()
+	{
+		return PropertiesManager.getProperty(DYNAMIC_IMAGES_ROOT);
+	}
+	
+	public static String getTemplateDir()
+	{
+		
+		return PathConstructor.getPath(new String[]{getRoot(),PropertiesManager.getProperty(DYNAMIC_IMAGES_TEMPLATE)});
+	}
+
+}

@@ -1,0 +1,107 @@
+package mamshops.servlet;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
+import javax.servlet.ServletContextEvent;
+import javax.servlet.ServletContextListener;
+
+import org.apache.catalina.Server;
+import org.apache.catalina.Service;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.core.StandardEngine;
+import org.apache.tomcat.util.http.mapper.Mapper;
+import org.apache.velocity.runtime.RuntimeConstants;
+
+import mamshops.properties.PropertiesManager;
+import mamshops.reflection.DataLoader;
+import mamshops.serviceLocators.IServiceLocator;
+import mamshops.serviceLocators.ServiceLocator;
+
+public class ApplicationServletContextListener implements ServletContextListener{
+	private static final String EXCEPTION_STOP_SERVER="server.exception.interrupt";
+	
+	@Override
+	public void contextDestroyed(ServletContextEvent arg0) {
+		for(IServiceLocator serviceLocator:ServiceLocator.getInstance().getAllServices())
+		{
+			serviceLocator.EndServiceLocator();
+			System.out.println(serviceLocator.getClass().getName() + " is closed");
+		}
+		System.out.println("Server closed");
+		
+	}
+
+	@Override
+	public void contextInitialized(ServletContextEvent servletContextEvent) {
+		// TODO Auto-generated method stub
+		System.out.println("start Server");
+		String root=servletContextEvent.getServletContext().getRealPath("");
+		System.out.println("Load all Data");	
+		DataLoader dataLoader;
+		try {
+			dataLoader=new DataLoader(root);
+		} catch (Exception e1) {
+			e1.printStackTrace();
+			java.lang.System.exit(1);
+			return;
+		}
+		boolean stopOnError=PropertiesManager.getProperty(EXCEPTION_STOP_SERVER).equals("true");
+		System.out.println("All Data loaded");
+		for(Class<IServiceLocator> thisClass : dataLoader.getClasses(IServiceLocator.class))
+		{
+			System.out.println("Initialise "+thisClass.getName());
+			try
+			{
+				IServiceLocator service=thisClass.newInstance();
+				service.InitServiceLocator(dataLoader);
+				ServiceLocator.getInstance().addService(service);
+				System.out.println(thisClass.getName()+" initialized");
+			}
+			catch(Exception e)
+			{
+				e.printStackTrace();
+				if(stopOnError)
+				{
+					java.lang.System.exit(1); 
+					return;
+				}
+				System.out.println("ERROR WHILE INITIALIZING "+thisClass.getName());
+			}			
+		}
+		System.out.println("Define aliases");
+		try 
+		{
+			MBeanServer mBeanServer = MBeanServerFactory.findMBeanServer(null).get(0);	     	    
+			ObjectName name= new ObjectName("Catalina", "type", "Server");
+			Server server = (Server) mBeanServer.getAttribute(name, "managedResource");
+			StandardEngine engine=null;
+			for(Service thisService:server.findServices())
+			{
+				if(thisService.getName().equals("Catalina"))
+					engine=(StandardEngine)thisService.getContainer();
+			}
+		    StandardContext context = (StandardContext) engine.findChild(engine.getDefaultHost()).findChild(servletContextEvent.getServletContext().getContextPath());
+		    Mapper mapper = context.getMapper();
+		    String pathAlias=PropertiesManager.getProperty("webcontent.path.alias");
+		    String pathContent=PropertiesManager.getProperty(RuntimeConstants.FILE_RESOURCE_LOADER_PATH);
+//		    mapper.addHostAlias(engine.getDefaultHost(),"/"+pathAlias+"="+"abc");	
+		    mapper.removeHost(engine.getDefaultHost());
+		    //add the host back with all required aliases 
+		    mapper.addHost(engine.getDefaultHost(), new String[]{"myAlias"}, engine.getDefaultHost());
+		    System.out.println();
+		} 
+		catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			if(stopOnError)
+			{
+				java.lang.System.exit(1); 
+				return;
+			}			
+		}	
+		System.out.println("Aliases Defined");
+		System.out.println("Server Initialized");
+	}
+
+}

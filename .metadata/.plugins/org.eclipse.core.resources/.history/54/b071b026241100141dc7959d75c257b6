@@ -1,0 +1,61 @@
+package mamshops.main.getters;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+
+import mamshops.admin.getters.ContainerAdminGetter;
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.database.MamsRelationship;
+import mamshops.businessmodels.enums.ContainerType;
+import mamshops.businessmodels.propertykeys.node.ContainerPropertyKey;
+import mamshops.businessmodels.relationships.types.ContainerRelationshipType;
+import mamshops.businessmodels.tools.UserMethodAccess;
+import mamshops.requests.getset.AbstractGetter;
+import mamshops.requests.keys.SessionAttributeKeys;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public class ContainerGetter extends AbstractGetter{	
+	
+	public ContainerGetter()
+	{
+		super(UserMethodAccess.none,SessionAttributeKeys.currentContainer);
+	}
+		
+	@HelperAnnotation(description="get the code of the container")
+	public String getContainerCode()
+	{
+		return _currentNode.getProperty(ContainerPropertyKey.code).toString();
+	}
+	
+	@HelperAnnotation(description="get the parent of the container")
+	public MamsNode getContainerParent()
+	{		
+		MamsRelationship relationship=_currentNode.getRelationships(ContainerRelationshipType.parent, true, false).get(0);
+		return _currentNode.getRelatedNode(relationship);
+	}
+
+	@HelperAnnotation(description="get all the children of the container")
+	public List<String> getContainerChildren()
+	{
+		Long parentId=Long.parseLong(_parameter);
+		return getContainerChildren(parentId);
+	}	
+
+	@HelperAnnotation(description="get all the children of the container")
+	public List<String> getContainerChildren(Long parentContainerId)
+	{
+		List<String> result=new ArrayList<>();
+		MamsNode parentNode=new MamsNode(parentContainerId);
+		for(MamsRelationship relationship:parentNode.getRelationships(ContainerRelationshipType.parent, true, false))
+			result.add(parentNode.getRelatedNode(relationship).getProperty(ContainerPropertyKey.code).toString());
+		return result;
+	}	
+	
+	@HelperAnnotation(description="get all root containers")
+	public HashMap<String,String> getRootContainers()
+	{
+		return construct(ContainerAdminGetter.class).getAllContainers(ContainerType.root.toString()); 
+	}
+
+}

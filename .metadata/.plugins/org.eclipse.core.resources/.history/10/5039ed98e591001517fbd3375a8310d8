@@ -1,0 +1,5 @@
+package nikoBlex.usecases.user;
+
+public class AuthorizationLevelGenericFunctions {
+
+}

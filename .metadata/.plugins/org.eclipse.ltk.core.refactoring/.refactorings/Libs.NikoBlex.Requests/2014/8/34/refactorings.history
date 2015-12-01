@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename package &apos;mamshops.requests.timeevent&apos; to &apos;mamshops.requests.setters&apos;&#x0D;&#x0A;- Original project: &apos;Libs.Mamshops.Requests&apos;&#x0D;&#x0A;- Original element: &apos;Libs.Mamshops.Requests/src/mamshops.requests.timeevent&apos;&#x0D;&#x0A;- Renamed element: &apos;Libs.Mamshops.Requests/src/mamshops.requests.setters&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" description="Rename package &apos;mamshops.requests.timeevent&apos;" flags="589830" hierarchical="false" id="org.eclipse.jdt.ui.rename.package" input="/src&lt;mamshops.requests.timeevent" name="mamshops.requests.setters" qualified="false" references="true" stamp="1408357869250" textual="false" version="1.0"/>
+</session>

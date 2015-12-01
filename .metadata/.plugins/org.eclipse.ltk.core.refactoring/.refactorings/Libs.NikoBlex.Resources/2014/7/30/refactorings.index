@@ -1,0 +1,4 @@
+1406106110670	Rename field '_parameter'
+1406133287668	Rename method 'uploadLocalImage'
+1406133322176	Rename method 'uploadUrlSnapshot'
+1406133636904	Rename method 'createImageFromUrl'

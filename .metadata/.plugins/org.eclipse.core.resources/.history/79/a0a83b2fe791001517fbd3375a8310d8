@@ -1,0 +1,5 @@
+package nikoBlex.requests.authorizationlevels;
+
+
+public class AuthorizationLevelGenericFunctions {	
+}

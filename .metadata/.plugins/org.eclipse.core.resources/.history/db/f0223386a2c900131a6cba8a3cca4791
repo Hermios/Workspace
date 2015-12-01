@@ -1,0 +1,43 @@
+package mamshops.admin.contexts;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+import javax.management.ObjectName;
+import javax.servlet.ServletContext;
+
+import mamshops.libs.entries.PropertiesManager;
+
+import org.apache.catalina.Container;
+import org.apache.catalina.Server;
+import org.apache.catalina.Service;
+import org.apache.catalina.core.StandardContext;
+import org.apache.catalina.core.StandardEngine;
+
+public class ContextManager {
+	private static final String MAIN_CONTEXT_NAME="context.main.name";
+	private static ContextManager _instance;
+	private ServletContext _remoteServletContext;	
+	private ContextManager() throws Exception
+	{		
+		MBeanServer mBeanServer = MBeanServerFactory.findMBeanServer(null).get(0);
+        ObjectName name = new ObjectName("Catalina", "type", "Server");
+        Server server = (Server) mBeanServer.getAttribute(name, "managedResource");        
+        StandardEngine engine = (StandardEngine) server.findService("Catalina").getContainer();        
+        for(Container container:engine.findChild(engine.getDefaultHost()).findChildren())
+        	System.out.println("Host CONTAINER NAME:"+container.getName());
+        StandardContext mainContext = (StandardContext)engine.findChild(engine.getDefaultHost()).findChild(PropertiesManager.getProperty(MAIN_CONTEXT_NAME));
+        _remoteServletContext=mainContext.getServletContext();
+	}
+	public static Object getRemoteContextObject(String key) throws Exception
+	{
+		return getInstance()._remoteServletContext.getAttribute(key);
+	}
+	
+	private static ContextManager getInstance() throws Exception
+	{
+		if(_instance==null)
+			_instance=new ContextManager();
+		return _instance;
+	}
+	
+}

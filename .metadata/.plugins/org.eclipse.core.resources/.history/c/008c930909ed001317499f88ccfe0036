@@ -1,0 +1,97 @@
+package mamshops.user.setters;
+
+import mamshops.businessmodels.database.MamsNode;
+import mamshops.businessmodels.propertykey.node.LocalizationPropertyKey;
+import mamshops.businessmodels.propertykey.node.NodeLabel;
+import mamshops.businessmodels.propertykey.node.UserPropertyKey;
+import mamshops.businessmodels.relationships.types.UserRelationshipType;
+import mamshops.main.setters.BasicUserSetter;
+import mamshops.requests.keys.RequestParameterKeys;
+import mamshops.requests.tools.UserMethodAccess;
+import mamshops.tools.annotations.HelperAnnotation;
+
+public class UserSetter extends BasicUserSetter{	
+	
+	public UserSetter()
+	{
+		super(UserMethodAccess.user);
+	}
+	
+	public UserSetter(MamsNode node)
+	{
+		super(node);
+	}
+	
+	public void setParameter(String parameter)
+	{
+		_parameter=parameter;
+	}
+	
+	@HelperAnnotation(description="set the first name of the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})	
+	public void setFirstName()
+	{
+		setAttribute(UserPropertyKey.firstname);
+	}
+	
+	@HelperAnnotation(description="set the nationality of the current user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setNationality()
+	{
+		replaceRelation(UserRelationshipType.nationality);
+	}
+	
+	@HelperAnnotation(description="set the country where the current user lives",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setCountry()
+	{
+		replaceRelation(UserRelationshipType.country);
+	}
+		
+	@HelperAnnotation(description="set true if the status of the current user is public, else false",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setStatus()
+	{
+		setAttribute(UserPropertyKey.status);
+	}
+	
+	@HelperAnnotation(description="set true if current user wants newsletter",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setHasNewsletter()
+	{
+		setAttribute(UserPropertyKey.hasNewsletter);
+	}
+	
+	@HelperAnnotation(description="set the city where the current user lives",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})	
+	public void setTown()
+	{
+		replaceRelation(UserRelationshipType.town);
+	}
+		
+	@HelperAnnotation(description="set if the last visited page should be kept",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void setKeepSelectedPage()
+	{
+		setAttribute(UserPropertyKey.keepVisitedFrame);
+	}
+	
+	@HelperAnnotation(description="add a shop to the list of this user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void addShop()
+	{
+		addRelation(UserRelationshipType.shop);
+	}
+	
+	@HelperAnnotation(description="remove a shop from the list of this user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void removeShop()
+	{
+		deleteRelation(UserRelationshipType.shop);
+	}
+	
+	@HelperAnnotation(description="add a delivering country to the list of this user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void addDeliveringCountry()
+	{
+		addRelation(UserRelationshipType.deliveringCountry);
+	}
+	
+	@HelperAnnotation(description="remove a delivering country from the list of this user",inputParameter={RequestParameterKeys.ATTRIBUTE_PARAMETER_ID})
+	public void removeDeliveringCountry()
+	{
+		_parameter=MamsNode.get(NodeLabel.country, LocalizationPropertyKey.code, _parameter);
+		deleteRelation(UserRelationshipType.deliveringCountry);
+	}
+
+}

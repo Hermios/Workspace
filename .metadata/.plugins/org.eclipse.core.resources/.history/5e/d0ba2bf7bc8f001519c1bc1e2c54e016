@@ -1,0 +1,16 @@
+package nikoBlex.requests.getset;
+
+
+import nikoBlex.requests.getset.AbstractSetter;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+import nikoBlex.usecases.user.IUserAuthorizationLevel;
+import nikoBlex.businessmodels.database.GraphNode;
+
+public abstract class AbstractSetter extends AbstractGetSet{	
+		
+	
+	protected AbstractSetter(IUserAuthorizationLevel methodAccess,
+			SessionAttributeKeys sessionAttributeKey) {
+		super(methodAccess, sessionAttributeKey);
+	}
+}

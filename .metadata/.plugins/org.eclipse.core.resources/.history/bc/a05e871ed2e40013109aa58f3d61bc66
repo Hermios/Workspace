@@ -1,0 +1,218 @@
+package mamshops.admin.dataLister;
+
+import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import javax.servlet.http.HttpServletRequest;
+
+import mamshops.requests.action.ActionHelpersManager;
+import mamshops.requests.action.IAction;
+import mamshops.requests.tomcat.ContextManager;
+import mamshops.requests.tomcat.ServletContextPropertyKeys;
+import mamshops.requests.velocity.IRequestGetter;
+import mamshops.requests.velocity.UserExpectedStatus;
+import mamshops.requests.velocity.VelocityManager;
+import mamshops.tools.annotations.HelperAnnotation;
+import mamshops.tools.annotations.VelocityAnnotation;
+import mamshops.tools.entries.ClassesManager;
+import mamshops.tools.entries.PropertiesManager;
+import mamshops.tools.serviceLocators.ServiceLocator;
+
+public class MethodsLister implements IRequestGetter{
+	
+	HashMap<String,List<MethodDescription>> _listRequestMethods=new HashMap<>();
+	HashMap<String,List<MethodDescription>> _listActionMethods=new HashMap<>();
+	List<PropertyDescription> _listProperties=new ArrayList<>();
+
+	@SuppressWarnings("unchecked")	
+	@Override
+	public void setRequest(HttpServletRequest request) throws Exception
+	{				
+		ServiceLocator sl=(ServiceLocator)new ContextManager(request.getServletContext()).getAttribute(ServletContextPropertyKeys.serviceLocator);
+		ActionHelpersManager ahm=sl.getService(ActionHelpersManager.class);
+		VelocityManager vm=sl.getService(VelocityManager.class);
+		_listProperties.clear();		
+		_listActionMethods.clear();
+		_listRequestMethods.clear();
+				
+		if(!PropertiesManager.getProperty("mamshops.debugMode").equals("true"))
+			return;
+
+		for(Entry<String, IAction> currentAction:ahm.getListActions().entrySet())
+		{
+			List<MethodDescription> listMethods=new ArrayList<>();
+			for(Method method:currentAction.getValue().getClass().getMethods())
+			{
+				if(method.isAnnotationPresent(HelperAnnotation.class))
+					listMethods.add(new MethodDescription(method));
+			}
+			_listActionMethods.put(currentAction.getKey(), listMethods);
+		}
+		
+		for(Entry<String, IRequestGetter> currentRequest:vm.getListRequestGetters().entrySet())
+		{
+			List<MethodDescription> listMethods=new ArrayList<>();
+			for(Method method:currentRequest.getValue().getClass().getMethods())
+			{
+				if(method.isAnnotationPresent(HelperAnnotation.class))
+					listMethods.add(new MethodDescription(method));
+			}
+			_listRequestMethods.put(currentRequest.getKey(), listMethods);
+		}
+						
+		Collections.sort(_listRequestMethods,new MethodsComparator());
+		
+		Collections.sort(_listActionMethods,new MethodsComparator());
+
+		for(Map.Entry<Object, Object> entry:PropertiesManager.getAllProperties().entrySet())
+			_listProperties.add(new PropertyDescription(entry));
+		
+		Collections.sort(_listProperties,new PropertiesComparator());
+	}
+
+	public List<MethodDescription> getRequestMethods(String className)
+	{
+		return _listRequestMethods.get(className);
+	}
+	
+	public List<MethodDescription> getActionHelpers(String className)
+	{
+		List<MethodDescription> result=_listActionMethods.get(className);
+		Collections.sort(result,new MethodsComparator());
+		return 
+	}
+		
+	public List<String> getActionClasses()
+	{
+		List<String> result=new ArrayList<>();
+		for(String action:_listActionMethods.keySet())
+			result.add(action);
+		Collections.sort(result);
+		return result;
+	}
+	
+	public List<String> getRequestClasses()
+	{
+		List<String> result=new ArrayList<>();
+		for(String request:_listRequestMethods.keySet())
+			result.add(request);
+		Collections.sort(result);
+		return result;
+	}
+
+	
+	public List<PropertyDescription> getProperties()
+	{
+		return _listProperties;
+	}
+	
+	public class PropertiesComparator implements Comparator<PropertyDescription>{
+
+		@Override
+		public int compare(PropertyDescription propDesc1, PropertyDescription propDesc2) {
+			return propDesc1.getKey().compareTo(propDesc2.getKey());
+		}
+	}
+	
+	public class PropertyDescription 
+	{
+		private Map.Entry<Object, Object> _entry;
+		
+		public PropertyDescription(Map.Entry<Object, Object> entry)
+		{
+			_entry=entry;
+		}
+		
+		public String getKey()
+		{
+			return _entry.getKey().toString();
+		}
+		
+		public String getValue()
+		{
+			return _entry.getValue().toString();
+		}
+
+
+	}
+
+	public class MethodDescription 
+	{
+		private String _name;
+		private String _parameters;
+		private String _description;
+		private String _returnType;
+		public MethodDescription(Method method)
+		{		
+			_name=method.getDeclaringClass().getSimpleName()+"."+method.getName();
+			
+			HelperAnnotation helperAnnotation=method.getAnnotation(HelperAnnotation.class);
+			if(helperAnnotation!=null)
+			{
+				_description=helperAnnotation.description();		
+				_parameters=String.join(",",helperAnnotation.inputParameter());
+			}		
+				
+			_returnType=method.getReturnType().getSimpleName();
+		}
+		
+		public MethodDescription(Method method,Class<?> currentClass)
+		{		
+			_name=currentClass.getSimpleName()+"."+method.getName();
+			
+			VelocityAnnotation velocityAnnotation=method.getAnnotation(VelocityAnnotation.class);		
+			if(velocityAnnotation!=null)
+			{
+				_description=velocityAnnotation.description();
+				List<String> parametersAsStrings=new ArrayList<>();
+				for(Parameter parameter:method.getParameters())
+					parametersAsStrings.add(parameter.getType().getSimpleName()+" "+parameter.getName());
+				_parameters=String.join(",",parametersAsStrings);
+			}
+				
+			_returnType=method.getReturnType().getSimpleName();
+		}
+
+		
+		public String getName()
+		{
+			return _name;
+		}
+		
+		public String getDescription()
+		{
+			return _description;
+		}
+		
+		public String getReturnType()
+		{
+			return _returnType;
+		}
+		
+		public String getParameters()
+		{
+			return _parameters;
+		}
+	
+}
+	
+	public class MethodsComparator implements Comparator<MethodDescription>
+	{
+		@Override
+		public int compare(MethodDescription methodDesc1, MethodDescription methodDesc2) {
+			return methodDesc1.getName().compareTo(methodDesc2.getName());
+		}	
+	}
+	
+	@Override
+	public UserExpectedStatus getExpectedStatus() {
+		return UserExpectedStatus.inactiv;
+	}
+}

@@ -1,0 +1,24 @@
+package mamshops.admin.dataLister;
+
+import java.util.Map;
+
+public class PropertyDescription {
+	private Map.Entry<Object, Object> _entry;
+	
+	public PropertyDescription(Map.Entry<Object, Object> entry)
+	{
+		_entry=entry;
+	}
+	
+	public String getKey()
+	{
+		return _entry.getKey().toString();
+	}
+	
+	public String getValue()
+	{
+		return _entry.getValue().toString();
+	}
+
+
+}

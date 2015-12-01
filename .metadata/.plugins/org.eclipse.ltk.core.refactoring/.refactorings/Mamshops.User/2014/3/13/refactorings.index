@@ -1,0 +1,85 @@
+1395678429564	Copy file
+1395738567448	Copy compilation unit
+1395740997055	Delete element
+1395741124373	Move compilation units
+1395741135324	Delete element
+1395741482708	Delete element
+1395741501909	Delete element
+1395741568762	Copy package
+1395741660490	Copy compilation unit
+1395741754293	Delete element
+1395743293984	Move compilation unit
+1395743307800	Delete element
+1395743327777	Move compilation units
+1395744042303	Move compilation unit
+1395744058767	Move compilation unit
+1395744151866	Move package
+1395776040308	Delete element
+1395776076917	Move compilation unit
+1395776853166	Delete element
+1395776907000	Delete element
+1395829503861	Delete element
+1395841085884	Copy compilation unit
+1395869297162	Move package
+1395869305808	Delete element
+1395869308951	Delete element
+1395869325224	Rename resource 'application'
+1395869342927	Copy folder
+1396000201425	Rename local variable 'type'
+1396000222858	Rename method 'SetLastVisitedPage'
+1396000524822	Rename field 'dm'
+1396000914685	Rename method 'RemoveRelationShip'
+1396001594992	Move compilation unit
+1396002368395	Rename type 'IRelationship'
+1396002758443	Rename method 'setProperty'
+1396002769645	Rename method 'getProperty'
+1396002931737	Delete element
+1396003863903	Move package
+1396004184842	Rename field '_shopNode'
+1396027880257	Move package
+1396027917110	Move compilation unit
+1396027984223	Move package
+1396033866002	Rename type 'UserRelationships'
+1396044843670	Rename type 'RelationshipsTypes'
+1396045743833	Rename type 'Node'
+1396045763809	Rename type 'DatabaseElement'
+1396046832368	Rename type 'NodesType'
+1396089606719	Rename type variable 'T1'
+1396089831021	Rename local variable 'classT'
+1396090419241	Infer generic type arguments
+1396090482813	Infer generic type arguments
+1396097873867	Rename type 'RelationshipsType'
+1396098311886	Rename local variable 'targetId'
+1396098372549	Delete element
+1396103885590	Copy package
+1396103898681	Rename type 'Shop'
+1396103905664	Rename type 'ShopConstants'
+1396103916499	Rename type 'ShopActionHelper'
+1396103922939	Rename type 'ShopRelationShips'
+1396103928609	Rename type 'ShopRequestHelper'
+1396104433991	Move compilation units
+1396104461628	Move compilation unit
+1396104469176	Move compilation unit
+1396104490968	Move compilation unit
+1396104497457	Move compilation unit
+1396104507861	Delete element
+1396106243813	Rename type 'ContainerConstants'
+1396106866462	Copy package
+1396112154718	Copy package
+1396112218020	Delete element
+1396117668041	Delete element
+1396117714405	Copy package
+1396117766174	Delete element
+1396118220064	Delete element
+1396118224856	Delete element
+1396118228802	Delete element
+1396118741249	Delete element
+1396180815332	Copy compilation unit
+1396180858772	Copy compilation unit
+1396180872316	Copy compilation unit
+1396180874641	Delete element
+1396180877643	Delete element
+1396183874031	Move files
+1396183878052	Delete element
+1396215856391	Move compilation unit
+1396216149496	Move compilation unit

@@ -1,0 +1,78 @@
+package nikoBlex.resources.pages;
+
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+import java.util.NoSuchElementException;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import nikoBlex.requests.get.VelocityManager;
+import nikoBlex.requests.getset.AbstractGetter;
+import nikoBlex.requests.keys.ServletContextPropertyKeys;
+import nikoBlex.requests.keys.SessionAttributeKeys;
+import nikoBlex.requests.tools.ContextManager;
+import nikoBlex.requests.tools.RequestGenericTools;
+import nikoBlex.resources.tools.ResourceTools;
+import nikoBlex.tools.entries.EnumPropertieKeys;
+import nikoBlex.tools.entries.PropertiesManager;
+import nikoBlex.tools.serviceLocators.ServiceLocator;
+import nikoBlex.tools.utils.PathConstructor;
+
+public abstract class DynamicPageHelper extends AbstractGetter{
+	
+	HashMap<String,Integer> _mapHtmlPages=new HashMap<>();
+	
+	public DynamicPageHelper()
+	{
+		super(UserMethodAccess.none,null,null,SessionAttributeKeys.currentFrame);
+		int i=0;
+		String currentHtmlPagesList=PropertiesManager.getString(EnumPropertieKeys.FRAME_AUTHORIZATION_LEVEL_START,String.valueOf(i));
+		while(currentHtmlPagesList!=null)
+		{
+			for(String currentHtmlPage:currentHtmlPagesList.split(";"))
+				_mapHtmlPages.put(currentHtmlPage, i);
+			i++;
+			currentHtmlPagesList=PropertiesManager.getString(EnumPropertieKeys.FRAME_AUTHORIZATION_LEVEL_START,String.valueOf(i));
+		}
+	}
+	
+	public static void doGet(HttpServletRequest request, HttpServletResponse response){
+		String target=RequestGenericTools.getTarget(request);		
+		if(target==null|| !target.endsWith("html"))
+			target=PropertiesManager.getString(EnumPropertieKeys.DEFAULT_PAGE);
+		target=PathConstructor.getPath(ResourceTools.getStaticResourceRoot(target),target);
+		ServiceLocator sl=(ServiceLocator)new ContextManager(request.getServletContext()).getAttribute(ServletContextPropertyKeys.serviceLocator);
+		VelocityManager vm=sl.getService(VelocityManager.class);		 		 				 
+		PrintWriter pw=null;		
+		try 
+		{
+			pw = response.getWriter();		
+			try
+			{
+				vm.generateCode(target,request, pw,RequestGenericTools.getUserStatusMask(request.getSession()),null);
+			}
+			catch(NoSuchElementException rnfe)
+			{		
+				rnfe.printStackTrace();		
+				target=PropertiesManager.getString(EnumPropertieKeys.PAGE_404);
+				target=PathConstructor.getPath(ResourceTools.getStaticResourceRoot(target),target);
+				try {
+					vm.generateCode(target,request, pw,0,null);
+				} catch (InstantiationException e) {
+					e.printStackTrace();
+				} catch (IllegalAccessException e) {
+					e.printStackTrace();
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			pw.println();
+		} 
+		catch (IOException e) 	
+		{
+			e.printStackTrace();
+		}
+	}	
+}
